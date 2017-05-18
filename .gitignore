@@ -1,4 +1,5 @@
 *.pyc
 *.swp
 data/*
-test/*
+annotation/juicebox/site_pos/*.txt
+test/HiC_1000/*
