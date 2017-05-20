@@ -95,8 +95,8 @@ for ID in ${ID_LIST[@]}; do
     echo -n "END $ID RMDUP: "; date; echo
   fi
   
-  if ! [ -e $REF_DIR/$REF.$RES_ENZYME.bed.gz ]; then
-    cat $REF_DIR/bwa_indices/$REF.fa | $BIN/ResEnzymeScan $RES_ENZYME 500 | bedtools merge -i - | gzip > $REF_DIR/$REF.$RES_ENZYME.bed.gz
+  if ! [ -e $REF_DIR/cut_sites/$REF.$RES_ENZYME.bed.gz ]; then
+    cat $REF_DIR/bwa_indices/$REF.fa | $BIN/ResEnzymeScan $RES_ENZYME 500 | bedtools merge -i - | gzip > $REF_DIR/cut_sites/$REF.$RES_ENZYME.bed.gz
   fi
   
   if ! [ -e $ID.$RES_ENZYME.bam ]; then

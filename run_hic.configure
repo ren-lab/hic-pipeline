@@ -1,0 +1,27 @@
+##################################################
+##  hic configuration file.                     ##
+## Use this file to customize your hic analysis ##
+##################################################
+
+################
+## Basic options 
+FASTQ_PREFIX=/mnt/silencer2/home/yanxiazh/software/github/pipeline-hic/benchmark/fastq/HiC_D00
+R1_SUFFIX=R1.fastq.bz2
+R2_SUFFIX=R2.fastq.bz2
+OUT_NAME=HiC
+OUT_DIR=/mnt/silencer2/home/yanxiazh/software/github/pipeline-hic/benchmark/HIC
+GENOME=hg19
+N_CPUS=8
+################
+
+
+##############
+## BWA options 
+##############
+
+## Others 
+RES_ENZYME=GATC
+TAD_BIN=40000
+TAD_WIN=50
+EMAIL=shz254@ucsd.edu
+
