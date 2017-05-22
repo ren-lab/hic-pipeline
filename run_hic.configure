@@ -8,7 +8,7 @@
 FASTQ_PREFIX=/mnt/silencer2/home/yanxiazh/software/github/pipeline-hic/benchmark/fastq/HiC_D00
 R1_SUFFIX=R1.fastq.bz2
 R2_SUFFIX=R2.fastq.bz2
-OUT_NAME=HiC
+NAME=HiC
 OUT_DIR=/mnt/silencer2/home/yanxiazh/software/github/pipeline-hic/benchmark/HIC
 GENOME=hg19
 N_CPUS=8
