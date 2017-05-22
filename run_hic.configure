@@ -11,7 +11,8 @@ R2_SUFFIX=R2.fastq.bz2
 NAME=HiC
 OUT_DIR=/mnt/silencer2/home/yanxiazh/software/github/pipeline-hic/benchmark/HIC
 GENOME=hg19
-N_CPUS=8
+N_CPUS=2
+N_LINES=1000
 ################
 
 
