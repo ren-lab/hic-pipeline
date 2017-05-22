@@ -1,0 +1,6 @@
+To install the software: 
+
+1. Configure the install.configure file. 
+
+2. In the root folder (pipeline_hic), run `make install`
+

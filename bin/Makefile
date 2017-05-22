@@ -23,6 +23,9 @@ ANNOTATION = $(BIN)/../annotation/
 #Functions
 #TIMEIT = time
 
+
+# declare PHONY targets: recipes. 
+.PHONY: all config_check init bwa_map dedup_bam filter_cutsite_bam bam2hic
 ### Begining of dependencies. 
 all: config_check init bwa_map dedup_bam filter_cutsite_bam bam2hic
 	@ echo okay done
