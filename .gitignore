@@ -1,6 +1,7 @@
 *.pyc
 *.swp
-benchmark/*
-!bnechmark/scripts/*
+benchmark/HiC_*/*
+benchmark/.snakemake/*
 annotation/juicebox/site_pos/*.txt
-
+system.configure
+system.Snakefile

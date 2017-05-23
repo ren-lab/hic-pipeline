@@ -44,4 +44,4 @@ if ! [ -e $CONFIG_FILE ]; then echo File $CONFIG_FILE not exist; exit 1; fi
 
 DIR=$(dirname $0)
 
-make -f ${DIR}/Makefile CONFIG_FILE=$CONFIG_FILE CONFIG_SYS=${DIR}/../install.configure
+make -f ${DIR}/Makefile CONFIG_FILE=$CONFIG_FILE CONFIG_SYS=${DIR}/../system.configure

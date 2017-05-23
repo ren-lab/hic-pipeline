@@ -1,0 +1,26 @@
+##################################################
+##  hic configuration file.                     ##
+## Use this file to customize your hic analysis ##
+##################################################
+
+################
+## Basic options 
+R1_SUFFIX: _R1.fastq.bz2
+R2_SUFFIX: _R2.fastq.bz2
+SAMPLES: HiC_D00 #HiC_D02
+GENOME: hg19
+N_CPUS : 2
+N_LINES : 1000
+################
+
+
+##############
+## BWA options 
+##############
+
+## Others 
+RES_ENZYME:  GATC
+TAD_BIN: 40000
+TAD_WIN: 50
+EMAIL: shz254@ucsd.edu
+

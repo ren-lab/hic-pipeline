@@ -2,11 +2,11 @@
 This is the Hic mapping pipeline for Ren lab. The script is still at the very preliminary stage, please let us know how to improve!
 
 # Dependencies 
-## BWA (version that contains `bwa mem` submodule.)
-## samtools 
-## picard [Dedup bam files]
-## juicebox.jar [to convert from bam to juicer format]
-## GNU coreutils sort (v8.22 or newer; contains the parallel option) 
+* BWA (version that contains `bwa mem` submodule.)
+* samtools 
+* picard [Dedup bam files]
+* juicebox.jar [to convert from bam to juicer format]
+* GNU coreutils sort (v8.22 or newer; contains the parallel option) 
 
 # Installation
 See INSTALL

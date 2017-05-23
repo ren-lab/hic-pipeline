@@ -1,0 +1,45 @@
+## Using absolute path. 
+## will leave it for now. Will include in the install script.  
+BASE_DIR = workflow.basedir
+BIN = BASE_DIR + "/../bin/"
+include: BASE_DIR + "/../system.Snakefile"
+
+GENOME = config["GENOME"]
+SAMPLES = config["SAMPLES"].split()
+REF = BWA_INDEX_PATH + "/" + GENOME
+N_CPUS = config["N_CPUS"]
+RES_ENZYME = config["RES_ENZYME"]
+SITE_POS = BIN + "/../annotation/juicebox/site_pos/"+ GENOME + "_" + RES_ENZYME + ".txt"
+R1 = config["R1_SUFFIX"]
+R2 = config["R2_SUFFIX"]
+N_LINES = config["N_LINES"]
+
+rule all:
+    input: 
+        expand("{sample}/{sample}.dedup.bam",sample=SAMPLES)
+
+rule bwa_map: 
+    output: 
+        "{sample}/{sample}.raw.bam",
+        "{sample}/log/bwa.F1.log",
+        "{sample}/qc/{sample}.raw.flagstat"
+    input: 
+        R1 = "fastq/{sample}"+R1,
+        R2 = "fastq/{sample}"+R2,
+    threads: N_CPUS
+    shell: 
+        "cd {wildcards.sample} && "
+        "{BIN}/bwa_map.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -s {SAMTOOLS_PATH} -e {SITE_POS} -n {wildcards.sample} -t {N_LINES}"
+
+
+rule bam_dedup:
+    output:
+        "{sample}/qc/{sample}.dedup.flagstat",
+        bam = "{sample}/{sample}.dedup.bam"
+    input:
+        "{sample}/qc/{sample}.raw.flagstat",
+        bam = "{sample}/{sample}.raw.bam"
+    threads: 1 
+    shell: 
+        "cd {wildcards.sample} &&"
+        "{BIN}/bam_dedup.sh -n {wildcards.sample} -s {SAMTOOLS_PATH}"
