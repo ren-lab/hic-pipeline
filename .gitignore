@@ -1,7 +1,7 @@
 *.pyc
 *.swp
 benchmark/HiC_*/*
-benchmark/fastq/*.bz2
+benchmark/fastq/*
 benchmark/pbslog/*
 benchmark/.snakemake/*
 annotation/juicebox/site_pos/*.txt
