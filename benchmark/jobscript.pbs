@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -V 
+#PBS -M shz254@ucsd.edu
+#PBS -l walltime=72:00:00
+#PBS -m ae
+#PBS -A ren-group
+
+# properties = {properties}
+module load biotools
+module load R
+unset PYTHONPATH
+source /home/shz254/py34env/bin/activate
+
+{exec_job}
+

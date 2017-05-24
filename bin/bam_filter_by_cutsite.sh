@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#! /usr/bin/env bash
 # bam_filter_by_cutsite.sh
 ################
 # This script will filter reads that are >500 of a enzyme cutting site.

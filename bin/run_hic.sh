@@ -25,6 +25,7 @@ while getopts "c:h:" OPT
 do
     case $OPT in
     c) CONFIG_FILE=$OPTARG;;
+    s) JOB_SCRIPT=$OPTARG;;
     h) help ;;
     \?)
          echo "Invalid option: -$OPTARG" >&2
@@ -44,4 +45,13 @@ if ! [ -e $CONFIG_FILE ]; then echo File $CONFIG_FILE not exist; exit 1; fi
 
 DIR=$(dirname $0)
 
-make -f ${DIR}/Makefile CONFIG_FILE=$CONFIG_FILE CONFIG_SYS=${DIR}/../system.configure
+#make -f ${DIR}/Makefile CONFIG_FILE=$CONFIG_FILE CONFIG_SYS=${DIR}/../system.configure
+command -v snakemake >/dev/null 2>&1 || { echo >&2 "snakemake is not installed";exit 1; }
+
+if [ -z ${JOB_SCRIPT+x} ]; then 
+  snakemake -p --snakefile ${DIR}/../scripts/Snakefile --configfile $CONFIG_FILE
+else 
+  snakemake --snakefile ${DIR}/../scripts/Snakefile --configfile $CONFIG_FILE -p  -k -j 500 --cluster "qsub -l nodes=1:ppn={threads} -N {rule} -q hotel -o pbslog/{rule}.pbs.out -e pbslog/{rule}.pbs.err" --jobscript $JOB_SCRIPT --jobname "{rulename}.{jobid}.pbs"
+fi 
+
+

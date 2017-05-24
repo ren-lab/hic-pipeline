@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#! /usr/bin/env bash
 # bwa_map.sh
 ################
 # This function will take a few arguments and map the reads using BWA MEM
@@ -50,6 +50,7 @@ if ! [ -e $R2 ]; then echo "$R2 not found"; exit 1; fi
 FIFO1=r1.fifo
 FIFO2=r2.fifo
 SAM=temp.sam
+NTHREADS=$((NTHREADS/2))
 
 mkfifo $FIFO1 $FIFO2 $SAM
 if [ ! -z ${N_LINES+x} ]; then 

@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#! /usr/bin/env bash
 # bam_dedup.sh
 ################
 # This script will dedup the bam file. 

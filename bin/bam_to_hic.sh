@@ -1,3 +1,4 @@
+#! /usr/bin/env bash
 BIN=$(dirname $0)
 
 
