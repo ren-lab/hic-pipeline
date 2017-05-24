@@ -7,7 +7,7 @@ This is the Hic mapping pipeline for Ren lab. The script is still at the very pr
 * picard [Dedup bam files]
 * juicebox.jar [to convert from bam to juicer format]
 * GNU coreutils sort (v8.22 or newer; contains the parallel option) 
-
+* snakemake [workflow management]
 # Installation
 See INSTALL
 

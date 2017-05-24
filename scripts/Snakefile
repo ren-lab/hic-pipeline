@@ -4,19 +4,22 @@ BASE_DIR = workflow.basedir
 BIN = BASE_DIR + "/../bin/"
 include: BASE_DIR + "/../system.Snakefile"
 
+
 GENOME = config["GENOME"]
 SAMPLES = config["SAMPLES"].split()
 REF = BWA_INDEX_PATH + "/" + GENOME
 N_CPUS = config["N_CPUS"]
 RES_ENZYME = config["RES_ENZYME"]
 SITE_POS = BIN + "/../annotation/juicebox/site_pos/"+ GENOME + "_" + RES_ENZYME + ".txt"
+ANNOTATION = BIN + "/../annotation/"
 R1 = config["R1_SUFFIX"]
 R2 = config["R2_SUFFIX"]
 N_LINES = config["N_LINES"]
 
 rule all:
     input: 
-        expand("{sample}/{sample}.dedup.bam",sample=SAMPLES)
+        expand("{sample}/{sample}.final.bam",sample=SAMPLES),
+        expand("{sample}/{sample}.hic",sample=SAMPLES)
 
 rule bwa_map: 
     output: 
@@ -43,3 +46,28 @@ rule bam_dedup:
     shell: 
         "cd {wildcards.sample} &&"
         "{BIN}/bam_dedup.sh -n {wildcards.sample} -s {SAMTOOLS_PATH}"
+
+rule bam_filter_cutsite:
+    output: 
+        "{sample}/qc/{sample}.final.flagstat",
+        bam = "{sample}/{sample}.final.bam"
+    input: 
+        "{sample}/qc/{sample}.dedup.flagstat",
+        bam = "{sample}/{sample}.dedup.bam"
+    threads: N_CPUS
+    shell: 
+        "cd {wildcards.sample} &&"
+        "{BIN}/bam_filter_by_cutsite.sh -n {wildcards.sample} -c {ANNOTATION}/cut_sites/{GENOME}.{RES_ENZYME}.bed.gz -p {threads} -s {SAMTOOLS_PATH}"
+
+rule bam2juicer:
+    output:
+        "{sample}/{sample}.hic"
+    input:
+        "{sample}/{sample}.final.bam"
+    threads: N_CPUS
+    shell:
+        "cd {wildcards.sample} &&"
+        "{BIN}/bam_to_hic.sh -n {wildcards.sample} -g {GENOME} -s {SAMTOOLS_PATH} -p {threads} -c {SITE_POS}"
+
+
+
