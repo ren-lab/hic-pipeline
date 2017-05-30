@@ -27,7 +27,10 @@ done
 echo "$(date) Entering $(basename $0)"
 SECONDS=0
 
-$samtools view $ID.final.bam | $BIN/sam2hic.pl | awk '{if ($3<$7) print $3$7,$0; else print $7$3,$0}' | $BIN/sort -T. --parallel=$NTHREADS -S 10% | cut -d ' ' -f 2- | gzip > $ID.juicer.txt.gz
+$samtools view $ID.final.bam | $BIN/sam2hic.pl | \
+awk '{if ($3<$7) print $3$7,$0; else print $7$3,$0}' | \
+$BIN/sort -T. --parallel=$NTHREADS -S 10% | \
+cut -d ' ' -f 2- | awk '{ if (NR%2==1)print $0}'| gzip > $ID.juicer.txt.gz
 java -jar $BIN/Juicebox.jar pre -q 30 -f $SITE_POS $ID.juicer.txt.gz $ID.hic $REF
 
 echo -en "$(date) Leaving $(basename $0);\t"
