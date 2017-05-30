@@ -42,7 +42,7 @@ rule bam_dedup:
     input:
         "{sample}/qc/{sample}.raw.flagstat",
         bam = "{sample}/{sample}.raw.bam"
-    threads: 1 
+    threads: N_CPUS 
     shell: 
         "cd {wildcards.sample} &&"
         "{BIN}/bam_dedup.sh -n {wildcards.sample} -s {SAMTOOLS_PATH}"
