@@ -50,7 +50,7 @@ command -v snakemake >/dev/null 2>&1 || { echo >&2 "snakemake is not installed";
 
 if [ -z ${JOB_SCRIPT+x} ]; then 
   source /mnt/silencer2/share/Piplines/environments/python3env/bin/activate
-  snakemake -p --snakefile ${DIR}/../scripts/Snakefile --configfile $CONFIG_FILE
+  snakemake -p --snakefile ${DIR}/../scripts/Snakefile --configfile $CONFIG_FILE --cores 20
 else 
   snakemake --snakefile ${DIR}/../scripts/Snakefile --configfile $CONFIG_FILE -p  -k -j 500 --cluster "qsub -l nodes=1:ppn={threads} -N {rule} -q hotel -o pbslog/{rule}.pbs.out -e pbslog/{rule}.pbs.err" --jobscript $JOB_SCRIPT --jobname "{rulename}.{jobid}.pbs"
 fi 

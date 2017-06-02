@@ -9,6 +9,7 @@ GENOME = config["GENOME"]
 SAMPLES = config["SAMPLES"].split()
 REF = BWA_INDEX_PATH + "/" + GENOME
 N_CPUS = config["N_CPUS"]
+print(N_CPUS)
 RES_ENZYME = config["RES_ENZYME"]
 SITE_POS = BIN + "/../annotation/juicebox/site_pos/"+ GENOME + "_" + RES_ENZYME + ".txt"
 ANNOTATION = BIN + "/../annotation/"
@@ -16,7 +17,13 @@ R1 = config["R1_SUFFIX"]
 R2 = config["R2_SUFFIX"]
 N_LINES = config["N_LINES"]
 
+
 rule all:
+    input:
+        expand("{sample}/{sample}.raw.bam",sample=SAMPLES),
+
+
+rule vanilla:
     input: 
         expand("{sample}/{sample}.final.bam",sample=SAMPLES),
         expand("{sample}/{sample}.hic",sample=SAMPLES)
@@ -29,6 +36,8 @@ rule bwa_map:
     input: 
         R1 = "fastq/{sample}"+R1,
         R2 = "fastq/{sample}"+R2,
+    benchmark:
+        "benchmarks/{sample}.bwa_map.txt"
     threads: N_CPUS
     shell: 
         "cd {wildcards.sample} && "
@@ -42,6 +51,8 @@ rule bam_dedup:
     input:
         "{sample}/qc/{sample}.raw.flagstat",
         bam = "{sample}/{sample}.raw.bam"
+    benchmark:
+        "benchmarks/{sample}.bam_dedup.txt"
     threads: N_CPUS 
     shell: 
         "cd {wildcards.sample} &&"
@@ -54,6 +65,8 @@ rule bam_filter_cutsite:
     input: 
         "{sample}/qc/{sample}.dedup.flagstat",
         bam = "{sample}/{sample}.dedup.bam"
+    benchmark:
+        "benchmarks/{sample}.filter_cutsite.txt"
     threads: N_CPUS
     shell: 
         "cd {wildcards.sample} &&"
@@ -64,6 +77,8 @@ rule bam2juicer:
         "{sample}/{sample}.hic"
     input:
         "{sample}/{sample}.final.bam"
+    benchmark:
+        "benchmarks/{sample}.bam2juicer.txt"
     threads: N_CPUS
     shell:
         "cd {wildcards.sample} &&"

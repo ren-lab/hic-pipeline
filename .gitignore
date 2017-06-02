@@ -1,9 +1,6 @@
 *.pyc
 *.swp
-benchmark/HiC_*/*
-benchmark/fastq/*
-benchmark/pbslog/*
-benchmark/.snakemake/*
+test/*
 annotation/juicebox/site_pos/*.txt
 system.configure
 system.Snakefile
