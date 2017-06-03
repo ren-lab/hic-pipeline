@@ -1,0 +1,75 @@
+## Using absolute path. 
+## will leave it for now. Will include in the install script.  
+BASE_DIR = workflow.basedir
+BIN = BASE_DIR + "/../bin/"
+include: BASE_DIR + "/../system.Snakefile"
+
+
+GENOME = config["GENOME"]
+SAMPLES = config["SAMPLES"].split()
+REF = BWA_INDEX_PATH + "/" + GENOME
+N_CPUS = config["N_CPUS"]
+print(N_CPUS)
+RES_ENZYME = config["RES_ENZYME"]
+SITE_POS = BIN + "/../annotation/juicebox/site_pos/"+ GENOME + "_" + RES_ENZYME + ".txt"
+ANNOTATION = BIN + "/../annotation/"
+R1 = config["R1_SUFFIX"]
+R2 = config["R2_SUFFIX"]
+N_LINES = config["N_LINES"]
+
+
+rule all:
+    input:
+        expand("{sample}/{sample}.raw.sam",sample=SAMPLES),
+        expand("{sample}/{sample}.valid_pairs.dedup.sorted.txt",sample=SAMPLES),
+        expand("{sample}/{sample}.hic",sample=SAMPLES),
+
+
+
+rule vanilla:
+    input: 
+        expand("{sample}/{sample}.final.bam",sample=SAMPLES),
+        expand("{sample}/{sample}.hic",sample=SAMPLES)
+
+rule bwa_map: 
+    output: 
+        "{sample}/{sample}.raw.sam",
+        "{sample}/{sample}.valid_pairs.txt",
+    input: 
+        R1 = "fastq/{sample}"+R1,
+        R2 = "fastq/{sample}"+R2,
+    benchmark:
+        "benchmarks/{sample}.bwa_map.txt"
+    threads: N_CPUS
+    shell: 
+        "cd {wildcards.sample} && "
+        "{BIN}/bwa_map2.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -s {SAMTOOLS_PATH} -e {SITE_POS} -n {wildcards.sample} -t {N_LINES}"
+
+rule valid_pairs_dedup:
+    output: 
+        "{sample}/{sample}.valid_pairs.dedup.sorted.txt"
+    input: 
+        "{sample}/{sample}.valid_pairs.txt"
+    benchmark:
+        "benchmarks/{sample}.valid_pairs_dedup.txt"
+    threads: N_CPUS
+    shell: 
+        "{BIN}/sort --parallel={threads} -k3,3 -k7,7 -k4,4n -k8,8n -u {input} > {output}"
+
+rule txt2juicer:
+    output:
+        "{sample}/{sample}.hic"
+    input:
+        "{sample}/{sample}.valid_pairs.dedup.sorted.txt"
+    benchmark:
+        "benchmarks/{sample}.txt2juicer.txt"
+    threads: 1
+    shell:
+        "java -jar {BIN}/juicer_tools.jar pre -q 30 -f {SITE_POS} {input} {output} {GENOME}"
+
+# rule to convert sam to bam
+# sort bam
+# dedup bam
+
+
+
