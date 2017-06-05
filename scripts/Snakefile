@@ -20,7 +20,7 @@ N_LINES = config["N_LINES"]
 
 rule all:
     input:
-        expand("{sample}/{sample}.raw.bam",sample=SAMPLES),
+        expand("{sample}/{sample}.hic",sample=SAMPLES),
 
 
 rule vanilla:

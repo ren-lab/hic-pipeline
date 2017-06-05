@@ -2,5 +2,7 @@
 *.swp
 test/*
 annotation/juicebox/site_pos/*.txt
+annotation/genome_features/*
 system.configure
 system.Snakefile
+lib/domaincall_software/*

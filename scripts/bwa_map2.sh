@@ -1,10 +1,11 @@
 #! /usr/bin/env bash
-# bwa_map.sh
+# bwa_map2.sh
 ################
 # This function will take a few arguments and map the reads using BWA MEM
 ################
+set -e
 set -o pipefail  #will return non-zero status for broken pipe. 
-BIN=$(dirname $0)
+BIN=$(dirname $0)/../bin/
 
 function usage(){
 echo -e "Usage: $0" 

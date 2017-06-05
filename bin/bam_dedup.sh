@@ -33,7 +33,7 @@ done
 
 ## beginning the scripts
 echo "$(date) Entering $(basename $0)"
-MARK_DUP="java -jar $BIN/picard.jar MarkDuplicates"
+MARK_DUP="java -jar $BIN/../lib/MarkDuplicates.jar"
 
 SECONDS=0
 $MARK_DUP INPUT=$ID.raw.bam  OUTPUT=$ID.dedup.bam ASSUME_SORTED=true REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=LENIENT TMP_DIR=tmp METRICS_FILE=log/$ID.metrics.log &> log/$ID.markdup.log
