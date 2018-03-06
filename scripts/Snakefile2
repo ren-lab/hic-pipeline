@@ -14,7 +14,7 @@ N_CPUS = config["N_CPUS"]
 RES_ENZYME = config["RES_ENZYME"]
 R1 = config["R1_SUFFIX"]
 R2 = config["R2_SUFFIX"]
-N_LINES = config["N_LINES"]
+#N_LINES = config["N_LINES"]
 ## resolution for directionality index and insulation
 BIN_SIZE = config["BIN_SIZE"]
 BIN_NUM = config["BIN_NUM"]
@@ -45,7 +45,7 @@ rule all:
 
 rule vanilla:
     input: 
-        expand("{sample}/{sample}.final.bam",sample=SAMPLES),
+        expand("{sample}/{sample}.raw.sam",sample=SAMPLES),
         expand("{sample}/{sample}.hic",sample=SAMPLES)
 
 rule bwa_map: 
@@ -61,7 +61,8 @@ rule bwa_map:
     threads: N_CPUS
     shell: 
         "cd {wildcards.sample} && "
-        "{SCP}/bwa_map2.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -s {SAMTOOLS_PATH} -e {SITE_POS} -n {wildcards.sample} -t {N_LINES}"
+        "{SCP}/bwa_map2.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -s {SAMTOOLS_PATH} -e {SITE_POS} -n {wildcards.sample}"
+        # -t {N_LINES}"
 
 rule valid_pairs_dedup:
     output: 

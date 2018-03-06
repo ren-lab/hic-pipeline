@@ -10,12 +10,15 @@
 all: build install
 
 ## build C executives
-build: bin/mkPE bin/ResEnzymeScan bin/sam2mat bin/mkPE2
+build: bin/mkPE bin/ResEnzymeScan bin/sam2mat bin/mkPE2 bin/mkPE3
 
 bin/mkPE: src/mkPE.cc
 	g++ $^ -o $@
 bin/mkPE2: src/mkPE2.cc
 	g++ $^ -o $@
+bin/mkPE3: src/mkPE3.cc
+	g++ $^ -o $@
+
 bin/ResEnzymeScan: src/ResEnzymeScan.cc
 	g++ $^ -o $@
 bin/sam2mat: src/sam2mat.cc src/CImg.h
