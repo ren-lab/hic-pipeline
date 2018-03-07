@@ -29,7 +29,7 @@ CHR = []
 with open(REF+".fa.fai") as inf:
     for line in inf:
         CHR.append(line.strip().split('\t')[0])
-print(CHR)
+#print(CHR)
 
 
 ## complete version will output the bam file in addition to the sorted txt files. 
@@ -49,7 +49,8 @@ rule vanilla:
         expand("{sample}/matrix/{sample}.{chr}.norm.DI",sample=SAMPLES,chr=CHR),
         expand("{sample}/matrix/{sample}.{chr}.insulation.bed",sample=SAMPLES,chr=CHR),
         expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
-
+        expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
+        expand("{sample}/{sample}.insulation.bedgraph",sample=SAMPLES),
 
 
 rule bwa_map: 
@@ -66,7 +67,7 @@ rule bwa_map:
     threads: N_CPUS
     shell: 
         "cd {wildcards.sample} && "
-        "{SCP}/bwa_map2.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -s {SAMTOOLS_PATH} -e {SITE_POS} -n {wildcards.sample}"
+        "{SCP}/bwa_map2.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -e {SITE_POS} -n {wildcards.sample}"
         # -t {N_LINES}"
 
 rule valid_pairs_dedup:
@@ -93,7 +94,7 @@ rule txt2juicer:
 
 rule juicer2di_insulation:
     output: 
-        ascNorm = "{sample}/matrx/{sample}.{chr}.norm.asc",
+        ascNorm = "{sample}/matrix/{sample}.{chr}.norm.asc",
         di = "{sample}/matrix/{sample}.{chr}.norm.DI",
         ins = "{sample}/matrix/{sample}.{chr}.insulation.bed"
     input: 

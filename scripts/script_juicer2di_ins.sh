@@ -1,7 +1,7 @@
 # "pairs2di_ins.sh"
 #
 ###################
-set -x
+#set -x
 set -e
 
 SCP=$(dirname $0)

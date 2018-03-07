@@ -10,10 +10,16 @@ a[bin_num,bin_num]=0;
 print bin_num, bin_num,1,1;
 }
 
-{ 
+{
+  if ($3 != "nan"){
   a[int($1/bin_size),int($2/bin_size)] = $3;
   a[int($2/bin_size),int($1/bin_size)] = $3;
-  
+  }
+  else {
+  a[int($1/bin_size),int($2/bin_size)] = 0;
+  a[int($2/bin_size),int($1/bin_size)] = 0;
+  }
+
 }
 END {
   for (i=0;i<bin_num;i++){
