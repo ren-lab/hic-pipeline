@@ -1,5 +1,7 @@
 /* mkPE2.cc */
-
+// This version does not remove cutting sites >500 from the restriction enzyme.
+// and does not output sam/bam files. 
+// Needs more tweaking. 
 #include <iostream>
 #include <fstream>
 #include <sstream>

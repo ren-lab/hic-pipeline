@@ -1,9 +1,7 @@
 To install the software: 
 
 
-1.First, download the whole repository by `git clone git@github.com:
-ren-lab/hic-pipeline.git`
-2. Configure the install.configure file pointing some required modules to 
-relevant path. 
+1.First, download the whole repository by `git clone git@github.com:ren-lab/hic-pipeline.git`
+2. Configure the install.configure file pointing some required modules to relevant path. 
 3. In the root folder (pipeline_hic), run `make install`
 

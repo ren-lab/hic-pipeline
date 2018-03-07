@@ -8,6 +8,8 @@ input=args[1]
 feat=args[2]
 chr=args[3]
 
+output = sub("asc","norm.asc",input)
+
 #read in input file
 #u<-read.table("CAC_1.chr1.asc",skip=1) 
 #print(c("input:", input));
@@ -16,8 +18,8 @@ u<-read.table(input,skip=1)
 h=length(u)
 if (h<2){
     h1=sprintf("%d %d 1 1",h,h)
-    write.table(h1, row.names=F, col.names=F, sep=" ", quote=F)
-    write.table(u, row.names=F, col.names=F, sep=" ", quote=F)
+    write.table(h1,output, row.names=F, col.names=F, sep=" ", quote=F)
+    write.table(u, output, row.names=F, col.names=F, sep=" ", quote=F)
     quit()
 }
 #v<-read.table("mm10.AAGCTT.100K.chr1.txt",head=T) #user can change the name of this input file
@@ -77,6 +79,6 @@ res2[w, w]=res
 #output normalized cis contact map, user can change the name of this output file
 #write.table(res2, file="output_normalized_hic_cis_contact_map.txt", row.names=F, col.names=F, sep="\t", quote=F)
 h1=sprintf("%d %d 1 1",h,h)
-write.table(h1, row.names=F, col.names=F, sep=" ", quote=F)
-write.table(res2, row.names=F, col.names=F, sep=" ", quote=F)
+write.table(h1, output, row.names=F, col.names=F, sep=" ", quote=F)
+write.table(res2, output, row.names=F, col.names=F, sep=" ", quote=F)
 

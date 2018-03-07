@@ -53,9 +53,7 @@ FIFO2=r2.fifo
 SAM=$ID.raw.sam
 NTHREADS=$((NTHREADS/2))
 
-if [ ! -e $FIFO1 ]; then mkfifo $FIFO1; fi
-if [ ! -e $FIFO2 ]; then mkfifo $FIFO2; fi
-
+mkfifo $FIFO1 $FIFO2 
 ### N_LINES is simply for testing purposes
 if [ ! -z ${N_LINES+x} ]; then 
   echo N_LINES: $N_LINES
@@ -65,13 +63,13 @@ if [ ! -z ${N_LINES+x} ]; then
   bwa mem -t $NTHREADS $REF.fa <(bzcat $R2|head -n $((4*$N_LINES)) ) \
   2> log/bwa.R2.log |\
   $BIN/chimeric.pl 2> log/bwa.F2.log > $FIFO2 |\
-  $BIN/mkPE3 -o $SAM -a $ID.valid_pairs.txt -p $SITE_POS -fnt -1 $FIFO1 -2 $FIFO2 -c 1 
+  $BIN/mkPE2 -o $SAM -a $ID.valid_pairs.txt -p $SITE_POS -fnt -1 $FIFO1 -2 $FIFO2 -c 1 
 else
   bwa mem -t $NTHREADS $REF.fa <(bzcat $R1 ) 2> log/bwa.R1.log |\
   $BIN/chimeric.pl 2> log/bwa.F1.log > $FIFO1 |\
   bwa mem -t $NTHREADS $REF.fa <(bzcat $R2 ) 2> log/bwa.R2.log |\
   $BIN/chimeric.pl 2> log/bwa.F2.log > $FIFO2 |\
-  $BIN/mkPE3 -o $SAM -a $ID.valid_pairs.txt -p $SITE_POS -fnt -1 $FIFO1 -2 $FIFO2 -c 1 
+  $BIN/mkPE2 -o $SAM -a $ID.valid_pairs.txt -p $SITE_POS -fnt -1 $FIFO1 -2 $FIFO2 -c 1 
 fi
 
 rm -f $FIFO1 $FIFO2 

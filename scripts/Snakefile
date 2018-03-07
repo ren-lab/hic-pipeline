@@ -2,37 +2,62 @@
 ## will leave it for now. Will include in the install script.  
 BASE_DIR = workflow.basedir
 BIN = BASE_DIR + "/../bin/"
+SCP = BASE_DIR + "/../scripts/"
+LIB = BASE_DIR + "/../lib/"
 include: BASE_DIR + "/../system.Snakefile"
 
 
 GENOME = config["GENOME"]
 SAMPLES = config["SAMPLES"].split()
-REF = BWA_INDEX_PATH + "/" + GENOME
 N_CPUS = config["N_CPUS"]
-print(N_CPUS)
+#print(N_CPUS)
 RES_ENZYME = config["RES_ENZYME"]
-SITE_POS = BIN + "/../annotation/juicebox/site_pos/"+ GENOME + "_" + RES_ENZYME + ".txt"
-ANNOTATION = BIN + "/../annotation/"
 R1 = config["R1_SUFFIX"]
 R2 = config["R2_SUFFIX"]
-N_LINES = config["N_LINES"]
+## resolution for directionality index and insulation
+BIN_SIZE = config["BIN_SIZE"]
+BIN_NUM = config["BIN_NUM"]
+## reference and annotation path
+REF = BWA_INDEX_PATH + "/" + GENOME
+#ANNOTATION = BIN + "/../annotation/"
+SITE_POS = BIN + "/../annotation/juicebox/site_pos/"+ GENOME + "_" + RES_ENZYME + ".txt"
+GENOME_FEATURE = BIN + "/../annotation/genome_features/"+ GENOME + \
+    "." + RES_ENZYME + "." + str(BIN_SIZE) + ".gnf"
+
+## read the chromosome information.
+CHR = []
+with open(REF+".fa.fai") as inf:
+    for line in inf:
+        CHR.append(line.strip().split('\t')[0])
+print(CHR)
 
 
+## complete version will output the bam file in addition to the sorted txt files. 
 rule all:
     input:
+        expand("{sample}/{sample}.raw.sam",sample=SAMPLES),
+        expand("{sample}/{sample}.valid_pairs.dedup.sorted.txt",sample=SAMPLES),
         expand("{sample}/{sample}.hic",sample=SAMPLES),
-
-
+        expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
+        expand("{sample}/{sample}.insulation.bedgraph",sample=SAMPLES),
+        expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
+        
 rule vanilla:
     input: 
-        expand("{sample}/{sample}.final.bam",sample=SAMPLES),
-        expand("{sample}/{sample}.hic",sample=SAMPLES)
+        expand("{sample}/{sample}.hic",sample=SAMPLES),
+#        expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
+        expand("{sample}/matrix/{sample}.{chr}.norm.DI",sample=SAMPLES,chr=CHR),
+        expand("{sample}/matrix/{sample}.{chr}.insulation.bed",sample=SAMPLES,chr=CHR),
+        expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
+
+
 
 rule bwa_map: 
     output: 
-        "{sample}/{sample}.raw.bam",
-        "{sample}/log/bwa.F1.log",
-        "{sample}/qc/{sample}.raw.flagstat"
+        # do not produce bam file.
+#        "{sample}/{sample}.raw.sam",
+        "{sample}/{sample}.valid_pairs.txt",
+        "{sample}/log/bwa.R1.log",
     input: 
         R1 = "fastq/{sample}"+R1,
         R2 = "fastq/{sample}"+R2,
@@ -41,48 +66,75 @@ rule bwa_map:
     threads: N_CPUS
     shell: 
         "cd {wildcards.sample} && "
-        "{BIN}/bwa_map.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -s {SAMTOOLS_PATH} -e {SITE_POS} -n {wildcards.sample} -t {N_LINES}"
+        "{SCP}/bwa_map2.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -s {SAMTOOLS_PATH} -e {SITE_POS} -n {wildcards.sample}"
+        # -t {N_LINES}"
 
-
-rule bam_dedup:
-    output:
-        "{sample}/qc/{sample}.dedup.flagstat",
-        bam = "{sample}/{sample}.dedup.bam"
-    input:
-        "{sample}/qc/{sample}.raw.flagstat",
-        bam = "{sample}/{sample}.raw.bam"
-    benchmark:
-        "benchmarks/{sample}.bam_dedup.txt"
-    threads: N_CPUS 
-    shell: 
-        "cd {wildcards.sample} &&"
-        "{BIN}/bam_dedup.sh -n {wildcards.sample} -s {SAMTOOLS_PATH}"
-
-rule bam_filter_cutsite:
+rule valid_pairs_dedup:
     output: 
-        "{sample}/qc/{sample}.final.flagstat",
-        bam = "{sample}/{sample}.final.bam"
+        "{sample}/{sample}.valid_pairs.dedup.sorted.txt"
     input: 
-        "{sample}/qc/{sample}.dedup.flagstat",
-        bam = "{sample}/{sample}.dedup.bam"
+        "{sample}/{sample}.valid_pairs.txt"
     benchmark:
-        "benchmarks/{sample}.filter_cutsite.txt"
+        "benchmarks/{sample}.valid_pairs_dedup.txt"
     threads: N_CPUS
     shell: 
-        "cd {wildcards.sample} &&"
-        "{BIN}/bam_filter_by_cutsite.sh -n {wildcards.sample} -c {ANNOTATION}/cut_sites/{GENOME}.{RES_ENZYME}.bed.gz -p {threads} -s {SAMTOOLS_PATH}"
+        "{LIB}/sort --parallel={threads} -k3,3 -k7,7 -k4,4n -k8,8n -u {input} > {output}"
 
-rule bam2juicer:
+rule txt2juicer:
     output:
         "{sample}/{sample}.hic"
     input:
-        "{sample}/{sample}.final.bam"
+        "{sample}/{sample}.valid_pairs.dedup.sorted.txt"
     benchmark:
-        "benchmarks/{sample}.bam2juicer.txt"
-    threads: N_CPUS
+        "benchmarks/{sample}.txt2juicer.txt"
+    threads: 1
     shell:
-        "cd {wildcards.sample} &&"
-        "{BIN}/bam_to_hic.sh -n {wildcards.sample} -g {GENOME} -s {SAMTOOLS_PATH} -p {threads} -c {SITE_POS}"
+        "java -jar {LIB}/juicer_tools.jar pre -q 30 -f {SITE_POS} {input} {output} {GENOME}"
+
+rule juicer2di_insulation:
+    output: 
+        ascNorm = "{sample}/matrx/{sample}.{chr}.norm.asc",
+        di = "{sample}/matrix/{sample}.{chr}.norm.DI",
+        ins = "{sample}/matrix/{sample}.{chr}.insulation.bed"
+    input: 
+        #"{sample}/{sample}.valid_pairs.dedup.sorted.txt"
+        "{sample}/{sample}.hic"
+    benchmark:
+        "benchmarks/{sample}.pairs2mat.txt"
+    threads: 1
+    shell:
+        "{SCP}/script_juicer2di_ins.sh {wildcards.chr} {REF} {BIN_SIZE} {BIN_NUM} "
+        "{GENOME_FEATURE} {wildcards.sample}"
+
+rule di2tad: 
+    output: 
+        "{sample}/{sample}.norm.DI.TAD"
+    input:
+        expand("{{sample}}/matrix/{{sample}}.{chr}.norm.DI",chr=CHR)
+    benchmark:
+        "benchmarks/{sample}.di2tad.txt"
+    threads: 1
+    log:
+        "{sample}/log/di2tad.log"
+    shell:
+        "cat {input} > {wildcards.sample}/{wildcards.sample}.norm.DI; "
+        "{LIB}/DI2TAD.sh {wildcards.sample}/{wildcards.sample}.norm.DI {REF} {BIN_SIZE} >& {log}"
+
+rule di_ins_bedgraph:
+    output: 
+        di = "{sample}/{sample}.norm.DI.bedgraph",
+        ins = "{sample}/{sample}.insulation.bedgraph"
+    input: 
+        di = expand("{{sample}}/matrix/{{sample}}.{chr}.norm.DI",chr=CHR),
+        ins = expand("{{sample}}/matrix/{{sample}}.{chr}.insulation.bed",chr=CHR)
+    threads: 1
+    shell:
+        "cat {input.di} |  awk '!/NA|-Inf/' - > {output.di};"
+        "cat {input.ins} |  awk '!/NA|-Inf/' - > {output.ins}"
+
+# rule to convert sam to bam
+# sort bam
+# dedup bam
 
 
 
