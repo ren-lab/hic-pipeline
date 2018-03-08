@@ -71,7 +71,7 @@ if [ $SERVER == "silencer" ]; then
   echo "$(date) # Analysis Began" > $LOG
   nice -n 19 snakemake vanilla -p -k --ri --snakefile ${DIR}/../scripts/Snakefile \
   --configfile $CONFIG_FILE --cores $NTHREADS \
-  --config BWA_INDEX_PATH=/mnt/silencer2/share/bwa_indices/ \
+  --config BWA_INDEX_PATH=/mnt/tscc/share/bwa_indices/ \
   2> >(tee -a $LOG >&2)
   echo "$status"
   echo "$(date) # Analysis finished" >> $LOG
@@ -80,11 +80,11 @@ if [ $SERVER == "silencer" ]; then
   Your results are saved in:
   $(pwd)"  | mail -s "ChIP-seq analysis Done" -a $LOG  $EMAIL )
 
-elif [ $server == "TSCC" ]; then
+elif [ $SERVER == "TSCC" ]; then
   ### load modules.
   module load python
-  unset PYTHONPATH
-  source /projects/ps-renlab/share/Pipelines/environments/python3env/bin/activate
+  unset $PYTHONPATH
+  source /projects/ps-renlab/share/Pipelines/environments/python3env_TSCC/bin/activate
   ### unlock the directory
   touch Snakefile
   snakemake --unlock
@@ -92,9 +92,11 @@ elif [ $server == "TSCC" ]; then
   ## started analysis
   if [ ! -d pbslog ]; then mkdir pbslog; fi
     echo "$(date) # Analysis Began" > $LOG
-  snakemake --snakefile ${DIR}/../scripts/Snakefile -p  -k -j 1000 --ri \
-  --configfile $CONFIG_FILE BWA_INDEX_PATH=/projects/ps-renlab/share/bwa_indices/ \
-  --cluster "qsub -l nodes=1:ppn={threads} -N {rule} -q hotel -o pbslog/{rule}.pbs.out -e pbslog/{rule}.pbs.err" 
+  snakemake vanilla --snakefile ${DIR}/../scripts/Snakefile -p  -k -j 1000 --ri \
+  --configfile $CONFIG_FILE \
+  --config BWA_INDEX_PATH=/projects/ps-renlab/share/bwa_indices/ \
+  --cluster-config ${DIR}/../cluster.json \
+  --cluster "qsub -l nodes=1:ppn={threads},walltime={cluster.time} -N {rule} -q hotel -o pbslog/{rule}.pbs.out -e pbslog/{rule}.pbs.err" \
   --jobscript ${DIR}/../scripts/jobscript.pbs --jobname "{rulename}.{jobid}.pbs" \
   2> >(tee -a $LOG >&2)
   echo "$(date) # Analysis finished" >> $LOG

@@ -1,0 +1,29 @@
+{
+  "__default__": {
+        "time": "4:00:00",
+    },
+
+  "bwa_map": {
+        "time": "96:00:00",
+    },
+
+  "valid_pairs_dedup": {
+        "time": "24:00:00",
+    },
+
+  "txt2juicer": {
+        "time": "36:00:00",
+    },
+
+  "juicer2di_insulation": {
+        "time": "24:00:00",
+    },
+
+  "di2tad": {
+        "time": "36:00:00",
+    },
+
+  "di_ins_bedgraph": {
+        "time": "1:00:00",
+    },
+}

@@ -4,12 +4,13 @@ BASE_DIR = workflow.basedir
 BIN = BASE_DIR + "/../bin/"
 SCP = BASE_DIR + "/../scripts/"
 LIB = BASE_DIR + "/../lib/"
-include: BASE_DIR + "/../system.Snakefile"
+#include: BASE_DIR + "/../system.Snakefile"
 
 
 GENOME = config["GENOME"]
 SAMPLES = config["SAMPLES"].split()
 N_CPUS = config["N_CPUS"]
+BWA_INDEX_PATH = config["BWA_INDEX_PATH"]
 #print(N_CPUS)
 RES_ENZYME = config["RES_ENZYME"]
 R1 = config["R1_SUFFIX"]

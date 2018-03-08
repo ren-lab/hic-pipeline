@@ -1,15 +1,17 @@
 #!/bin/bash
+
 #PBS -V 
-#PBS -M shz254@ucsd.edu
-#PBS -l walltime=72:00:00
-#PBS -m ae
+##PBS -l walltime=72:00:00
+#PBS -m a
 #PBS -A ren-group
 
 # properties = {properties}
-module load biotools
-module load R
+#module load biotools
+#module load R
+module load bwa
 unset PYTHONPATH
-source /home/shz254/py34env/bin/activate
+source /projects/ps-renlab/share/Pipelines/environments/python3env_TSCC/bin/activate
+export R_LIBS=/projects/ps-renlab/share/Pipelines/environments/R_LIB_TSCC/:$R_LIBS
 
 {exec_job}
 
