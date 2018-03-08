@@ -1,4 +1,0 @@
-############# configuration for installation ########
-BWA_PATH=/usr/bin/bwa 
-BWA_INDEX_PATH=/mnt/silencer2/HiC/ref/
-SAMTOOLS_PATH=/usr/local/bin/samtools
