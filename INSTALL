@@ -2,4 +2,4 @@ To install the software:
 
 1.First, download the whole repository by `git clone git@github.com:ren-lab/hic-pipeline.git`
 2. In the root folder (pipeline_hic), run `make`
-3. If there is no error raised, you are probably ***good*** to go. 
+3. If there is no error raised, you are probably good to go. 
