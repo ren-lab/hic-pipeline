@@ -5,22 +5,14 @@
 
 ################
 ## Basic options 
+# R1 and R2 suffix 
 R1_SUFFIX: _R1.fastq.bz2
 R2_SUFFIX: _R2.fastq.bz2
-SAMPLES: HiC_D00 #HiC_D02
-GENOME: hg19
-N_CPUS : 2
-N_LINES : 1000
-################
-
-
-##############
-## BWA options 
-##############
-
-## Others 
-RES_ENZYME:  GATC
-BIN_SIZE: 40000
-BIN_NUM: 50
-EMAIL: shz254@ucsd.edu
+SAMPLES: HiC_D00  # sample names 
+GENOME: hg19   # genome build
+N_CPUS : 12  #number of CPUs
+RES_ENZYME:  GATC  # restriction enzyme. 
+BIN_SIZE: 50000  #bin size for calculating DI and insulation.
+BIN_NUM: 50 # number of bins to calculate DI TADs. 
+#EMAIL: shz254@ucsd.edu  #
 
