@@ -6,8 +6,8 @@
 ################
 ## Basic options 
 # R1 and R2 suffix 
-R1_SUFFIX: _R1.fastq.bz2
-R2_SUFFIX: _R2.fastq.bz2
+R1_SUFFIX: _R1.fastq
+R2_SUFFIX: _R2.fastq
 SAMPLES: HiC_D00  # sample names 
 GENOME: hg19   # genome build
 N_CPUS : 12  #number of CPUs

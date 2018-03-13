@@ -10,10 +10,10 @@
 all: build install
 
 ## build C executives
-build: bin/mkPE bin/ResEnzymeScan bin/sam2mat bin/mkPE2 bin/mkPE3
+build: bin/ResEnzymeScan bin/sam2mat bin/mkPE2 bin/mkPE3 #bin/mkPE
 
-bin/mkPE: src/mkPE.cc
-	g++ $^ -o $@
+#bin/mkPE: src/mkPE.cc
+#	g++ $^ -o $@
 bin/mkPE2: src/mkPE2.cc
 	g++ $^ -o $@
 bin/mkPE3: src/mkPE3.cc
@@ -27,7 +27,7 @@ bin/sam2mat: src/sam2mat.cc src/CImg.h
 
 SITE_POS := annotation/juicebox/site_pos
 GENOME_FEATURE := annotation/genome_features/
-DOMAIN_CALL: lib/domaincall_software
+DOMAIN_CALL:= lib/domaincall_software
 
 install: site_pos genome_features domaincall
 

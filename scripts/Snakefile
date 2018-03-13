@@ -1,3 +1,5 @@
+import glob
+
 ## Using absolute path. 
 ## will leave it for now. Will include in the install script.  
 BASE_DIR = workflow.basedir
@@ -8,13 +10,24 @@ LIB = BASE_DIR + "/../lib/"
 
 
 GENOME = config["GENOME"]
+# samples
 SAMPLES = config["SAMPLES"].split()
+R1 = config["R1_SUFFIX"]
+R2 = config["R2_SUFFIX"]
+# fastqs
+FASTQ_R1 = {} 
+FASTQ_R2 = {}
+for sample in SAMPLES:
+  fastq_r1 = glob.glob("fastq/"+sample+R1+"*")
+  FASTQ_R1[sample] = fastq_r1
+  fastq_r2 = glob.glob("fastq/"+sample+R2+"*")
+  FASTQ_R2[sample] = fastq_r2
+
+
 N_CPUS = config["N_CPUS"]
 BWA_INDEX_PATH = config["BWA_INDEX_PATH"]
 #print(N_CPUS)
 RES_ENZYME = config["RES_ENZYME"]
-R1 = config["R1_SUFFIX"]
-R2 = config["R2_SUFFIX"]
 ## resolution for directionality index and insulation
 BIN_SIZE = config["BIN_SIZE"]
 BIN_NUM = config["BIN_NUM"]
@@ -61,15 +74,14 @@ rule bwa_map:
         "{sample}/{sample}.valid_pairs.txt",
         "{sample}/log/bwa.R1.log",
     input: 
-        R1 = "fastq/{sample}"+R1,
-        R2 = "fastq/{sample}"+R2,
+        R1 = lambda wildcards: FASTQ_R1[wildcards.sample],
+        R2 = lambda wildcards: FASTQ_R2[wildcards.sample]
     benchmark:
         "benchmarks/{sample}.bwa_map.txt"
     threads: N_CPUS
     shell: 
         "cd {wildcards.sample} && "
         "{SCP}/bwa_map2.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -e {SITE_POS} -n {wildcards.sample}"
-        # -t {N_LINES}"
 
 rule valid_pairs_dedup:
     output: 

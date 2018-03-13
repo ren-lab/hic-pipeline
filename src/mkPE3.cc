@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
     ofstream ofTxt;
     ostream* outp = &cout;
     ostream* outq = &cout;
-    if (pSam) { ofSam.open(pSam); outp=&ofSam; }
+//    if (pSam) { ofSam.open(pSam); outp=&ofSam; }
     if (pTxt) { ofTxt.open(pTxt); outq=&ofTxt; }
 
     if (pSitePos) {
