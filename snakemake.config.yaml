@@ -5,12 +5,14 @@
 
 ################
 ## Basic options 
-# R1 and R2 suffix 
+# R1 and R2 suffix. No need to specify the compression format, 
+# the program will auto-detect.
 R1_SUFFIX: _R1.fastq
 R2_SUFFIX: _R2.fastq
-SAMPLES: HiC_D00  # sample names 
+################################
+SAMPLES: HiC_D00  # sample names that you want to analyze. 
 GENOME: hg19   # genome build
-N_CPUS : 12  #number of CPUs
+N_CPUS : 12  #number of CPUs for each sample. 
 RES_ENZYME:  GATC  # restriction enzyme. 
 BIN_SIZE: 50000  #bin size for calculating DI and insulation.
 BIN_NUM: 40 # number of bins to calculate DI TADs. 
