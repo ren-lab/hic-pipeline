@@ -78,7 +78,7 @@ if [ $SERVER == "silencer" ]; then
   [[ $EMAIL =~ @ ]] && (
   echo "See attachment for the running log.
   Your results are saved in:
-  $(pwd)"  | mail -s "ChIP-seq analysis Done" -a $LOG  $EMAIL )
+  $(pwd)"  | mail -s "Hi-C analysis done" -a $LOG  $EMAIL )
 
 elif [ $SERVER == "TSCC" ]; then
   ### load modules.
@@ -103,10 +103,9 @@ elif [ $SERVER == "TSCC" ]; then
   [[ $EMAIL =~ @ ]] && (
   echo "See attachment for the running log.
   Your results are saved in:
-  $(pwd)"  | mail -s "ChIP-seq analysis Done" -a $LOG  $EMAIL
+  $(pwd)"  | mail -s "Hi-C analysis done" -a $LOG  $EMAIL
   )
 else 
-  echo -e "Invalide server option: $server"; exit 1;
+  echo -e "Invalid server option: $server"; exit 1;
 fi 
-
 
