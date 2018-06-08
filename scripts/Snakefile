@@ -66,6 +66,11 @@ rule vanilla:
         expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
         expand("{sample}/{sample}.insulation.bedgraph",sample=SAMPLES),
 
+rule valid_pairs:
+    input:
+        expand("{sample}/{sample}.valid_pairs.dedup.sorted.txt",sample=SAMPLES),
+        "mapping_summary.txt"
+
 
 rule bwa_map: 
     output: 
@@ -145,6 +150,32 @@ rule di_ins_bedgraph:
     shell:
         "cat {input.di} |  awk '!/NA|-Inf/' - > {output.di};"
         "cat {input.ins} |  awk '!/NA|-Inf/' - > {output.ins}"
+
+rule qc_per_sample: 
+  input:
+      fastq = lambda wildcards: FASTQ_R1[wildcards.sample],
+      valid_pairs = "{sample}/{sample}.valid_pairs.txt",
+      valid_nodup_pairs = "{sample}/{sample}.valid_pairs.dedup.sorted.txt"
+  output: 
+      "{sample}/{sample}.mapping_summary.txt"
+  threads: 1
+  shell: 
+    "fa=$(bzcat {input.fastq} |wc -l);"
+    "fa=$((fa/4));"
+    "vp=$(wc -l {input.valid_pairs}|cut -f 1 -d' ' );"
+    "vpNodup=$(wc -l {input.valid_nodup_pairs}|cut -f 1 -d' ' );"
+    "cis_pair=$(awk -v FS='\t' -v OFS='\t' '{{if ($3 == $7){{ m++;if ( $8-$4 >=15000 || $8-$4 <= -15000 ) {{n++}} }} }}END {{ print m,n}}' {input.valid_nodup_pairs} );"
+    "echo -e \"Sample\tRaw\tVP\tVP_uniq\tVP_cis\tVP_cis15k\"  > {output};"
+    "echo -e \"{wildcards.sample}\t$fa\t$vp\t$vpNodup\t$cis_pair\" >> {output}"
+
+rule qc_combine: 
+  input: 
+      expand("{sample}/{sample}.mapping_summary.txt", sample=SAMPLES)
+  output: 
+      "mapping_summary.txt"
+  threads: 1
+  shell:
+    "cat {input} | awk -v OFS='\t' '{{ if (NR==1) {{ print $0 }} else {{ if (NR%2==0) {{ print $0 }} }} }}' > {output};"
 
 # rule to convert sam to bam
 # sort bam
