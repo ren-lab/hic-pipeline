@@ -49,7 +49,7 @@ $(GENOME_FEATURE)/hg19.GATC.40000.gnf:
 	tar xvf genome_features.tar.gz
 
 $(DOMAIN_CALL)/HMM_calls.m:
-	cd $(DOMAIN_CALL) && \
+	cd lib && \
 	wget -r --no-directories --no-parent  http://renlab.sdsc.edu/yanxiao/download/hic-pip/domaincall_software.tar.gz && \
 	tar xvf domaincall_software.tar.gz
 

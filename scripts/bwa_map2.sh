@@ -49,7 +49,7 @@ if [ ${R1: -3} == ".gz" ]; then
   Read="zcat"
   elif [ ${R1: -4} == ".bz2" ]; then
   Read="bzcat"
-  elif [ ${R1: -6} == ".R1" ]; then
+  elif [ ${R1: -6} == ".fastq" ]; then
   Read="cat"
   else
     echo "File extension of $R1 not recognized.
