@@ -38,11 +38,16 @@ SITE_POS = BIN + "/../annotation/juicebox/site_pos/"+ GENOME + "_" + RES_ENZYME 
 GENOME_FEATURE = BIN + "/../annotation/genome_features/"+ GENOME + \
     "." + RES_ENZYME + "." + str(BIN_SIZE) + ".gnf"
 
+TSS_DICT = {"hg19":BIN + "../annotation/TSSs/hg19.gencode.v19.annotation.transcripts.tss10k.bed"}
+TSS = TSS_DICT[GENOME]
+
 ## read the chromosome information.
 CHR = []
 with open(REF+".fa.fai") as inf:
     for line in inf:
         CHR.append(line.strip().split('\t')[0])
+if "chrM" in CHR: 
+  CHR.remove("chrM")
 #print(CHR)
 
 
@@ -55,6 +60,7 @@ rule all:
         expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
         expand("{sample}/{sample}.insulation.bedgraph",sample=SAMPLES),
         expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
+
         
 rule vanilla:
     input: 
@@ -62,9 +68,10 @@ rule vanilla:
 #        expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
         expand("{sample}/matrix/{sample}.{chr}.norm.DI",sample=SAMPLES,chr=CHR),
         expand("{sample}/matrix/{sample}.{chr}.insulation.bed",sample=SAMPLES,chr=CHR),
-        expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
+#        expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
         expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
         expand("{sample}/{sample}.insulation.bedgraph",sample=SAMPLES),
+        expand("{sample}/{sample}.PC1.bedgraph",sample=SAMPLES),
 
 rule valid_pairs:
     input:
@@ -124,6 +131,29 @@ rule juicer2di_insulation:
     shell:
         "{SCP}/script_juicer2di_ins.sh {wildcards.chr} {REF} {BIN_SIZE} {BIN_NUM} "
         "{GENOME_FEATURE} {wildcards.sample}"
+
+## juicer to OE matrix and to PCA analysis.
+rule juicer2PC1: 
+  output:
+    PC1 = "{sample}/matrix/{sample}.{chr}.PC1",
+    oe = temp("{sample}/matrix/{sample}.{chr}.oe"),
+  input: 
+    "{sample}/{sample}.hic"
+  benchmark:
+    "benchmarks/{sample}.{chr}.juicer2oe.txt"
+  threads: 1
+  shell: 
+    "java -jar {LIB}/juicer_tools.jar dump oe KR {input} {wildcards.chr} {wildcards.chr} BP {BIN_SIZE} "
+    "> {output.oe};Rscript {SCP}/calc_PC1.r {output.oe} {wildcards.chr} {TSS} > {output.PC1}"
+    
+rule combine_PC1: 
+  output: 
+    "{sample}/{sample}.PC1.bedgraph"
+  input: 
+        expand("{{sample}}/matrix/{{sample}}.{chr}.PC1",chr=CHR),
+  threads: 1
+  shell:
+    "cat {input} > {output}" 
 
 rule di2tad: 
     output: 

@@ -3,6 +3,7 @@
 test/*
 annotation/juicebox/site_pos/*.txt
 annotation/genome_features/*
+annotation/TSSs/*
 system.configure
 system.Snakefile
 lib/domaincall_software/*

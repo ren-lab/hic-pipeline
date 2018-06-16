@@ -28,14 +28,17 @@ bin/sam2mat: src/sam2mat.cc src/CImg.h
 SITE_POS := annotation/juicebox/site_pos
 GENOME_FEATURE := annotation/genome_features/
 DOMAIN_CALL:= lib/domaincall_software
+TSS := annotation/TSSs
 
-install: site_pos genome_features domaincall
+install: site_pos genome_features domaincall TSSs
 
 site_pos: $(SITE_POS)/hg19_GATC.txt
 
 genome_features: $(GENOME_FEATURE)/hg19.GATC.40000.gnf
 
 domaincall: $(DOMAIN_CALL)/HMM_calls.m
+
+TSSs: $(TSS)/hg19.gencode.v19.annotation.transcripts.tss10k.bed
 
 $(SITE_POS)/hg19_GATC.txt: 
 	cd $(SITE_POS) && \
