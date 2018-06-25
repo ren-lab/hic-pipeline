@@ -32,5 +32,8 @@ See INSTALL
 ## calculate insulation scores
   Use the method from Nagano et al. 2017; Olivares-Chauvet et al 2016
 ## calculate AB compartments
-  Sorry, not yet implemented here. Coming soon. 
-
+  Implemented the method from Rao et al. 2009. 
+  
+# Contributing Authors
+* [Shawn Yanxiao Zhang](https://github.com/shawnzhangyx)
+* Initial pieces from [Bin Li](https://github.com/bil022)
