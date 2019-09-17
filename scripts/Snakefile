@@ -38,8 +38,8 @@ SITE_POS = BIN + "/../annotation/juicebox/site_pos/"+ GENOME + "_" + RES_ENZYME 
 GENOME_FEATURE = BIN + "/../annotation/genome_features/"+ GENOME + \
     "." + RES_ENZYME + "." + str(BIN_SIZE) + ".gnf"
 
-TSS_DICT = {"hg19":BIN + "../annotation/TSSs/hg19.gencode.v19.annotation.transcripts.tss10k.bed"}
-TSS = TSS_DICT[GENOME]
+#TSS_DICT = {"hg19":BIN + "../annotation/TSSs/hg19.gencode.v19.annotation.transcripts.tss10k.bed"}
+#TSS = TSS_DICT[GENOME]
 
 ## read the chromosome information.
 CHR = []
@@ -71,7 +71,7 @@ rule vanilla:
 #        expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
         expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
         expand("{sample}/{sample}.insulation.bedgraph",sample=SAMPLES),
-        expand("{sample}/{sample}.PC1.bedgraph",sample=SAMPLES),
+#        expand("{sample}/{sample}.PC1.bedgraph",sample=SAMPLES),
 
 rule valid_pairs:
     input:

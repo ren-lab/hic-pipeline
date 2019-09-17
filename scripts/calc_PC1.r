@@ -2,6 +2,7 @@
 suppressMessages(require(data.table))
 suppressMessages(require(GenomicRanges))
 a=fread(commandArgs(trailing=T)[1],skip=1)
+a[is.na(a)] = 0
 alist = as.list(a)
 
 # correlation matrix
