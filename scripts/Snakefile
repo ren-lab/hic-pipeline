@@ -38,8 +38,8 @@ SITE_POS = BIN + "/../annotation/juicebox/site_pos/"+ GENOME + "_" + RES_ENZYME 
 GENOME_FEATURE = BIN + "/../annotation/genome_features/"+ GENOME + \
     "." + RES_ENZYME + "." + str(BIN_SIZE) + ".gnf"
 
-TSS_DICT = {"hg19":BIN + "../annotation/TSSs/hg19.gencode.v19.annotation.transcripts.tss10k.bed"}
-TSS = TSS_DICT[GENOME]
+#TSS_DICT = {"hg19":BIN + "../annotation/TSSs/hg19.gencode.v19.annotation.transcripts.tss10k.bed"}
+#TSS = TSS_DICT[GENOME]
 
 ## read the chromosome information.
 CHR = []
@@ -54,12 +54,12 @@ if "chrM" in CHR:
 ## complete version will output the bam file in addition to the sorted txt files. 
 rule all:
     input:
-        expand("{sample}/{sample}.raw.sam",sample=SAMPLES),
-        expand("{sample}/{sample}.valid_pairs.dedup.sorted.txt",sample=SAMPLES),
+#        expand("{sample}/{sample}.raw.sam",sample=SAMPLES),
+#        expand("{sample}/{sample}.valid_pairs.dedup.sorted.txt",sample=SAMPLES),
         expand("{sample}/{sample}.hic",sample=SAMPLES),
         expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
-        expand("{sample}/{sample}.insulation.bedgraph",sample=SAMPLES),
-        expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
+#        expand("{sample}/{sample}.insulation.bedgraph",sample=SAMPLES),
+#        expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
 
         
 rule vanilla:
@@ -68,10 +68,10 @@ rule vanilla:
 #        expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
         expand("{sample}/matrix/{sample}.{chr}.norm.DI",sample=SAMPLES,chr=CHR),
         expand("{sample}/matrix/{sample}.{chr}.insulation.bed",sample=SAMPLES,chr=CHR),
-#        expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
+        expand("{sample}/{sample}.norm.DI.TAD",sample=SAMPLES),
         expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
         expand("{sample}/{sample}.insulation.bedgraph",sample=SAMPLES),
-        expand("{sample}/{sample}.PC1.bedgraph",sample=SAMPLES),
+#        expand("{sample}/{sample}.PC1.bedgraph",sample=SAMPLES),
 
 rule valid_pairs:
     input:

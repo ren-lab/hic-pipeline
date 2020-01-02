@@ -73,7 +73,7 @@ if [ $SERVER == "silencer" ]; then
   echo "$(date) # Analysis Began" > $LOG
   nice -n 19 snakemake $OPTION -p -k --ri --snakefile ${DIR}/../scripts/Snakefile \
   --configfile $CONFIG_FILE --cores $NTHREADS \
-  --config BWA_INDEX_PATH=/mnt/tscc/share/bwa_indices/ \
+  --config BWA_INDEX_PATH=/projects/ps-renlab/share/bwa_indices/ \
   2> >(tee -a $LOG >&2)
   echo "$status"
   echo "$(date) # Analysis finished" >> $LOG
