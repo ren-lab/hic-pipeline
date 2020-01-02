@@ -64,7 +64,7 @@ LOG=run-$(date +%Y-%m-%d-%H-%M-%S).log
 
 ## load snakemake environment for Renlab
 if [ $SERVER == "silencer" ]; then
-  source /mnt/tscc/share/Pipelines/environments/python3env/bin/activate
+  source /projects/ps-renlab/share/Pipelines/environments/python3env/bin/activate
   ### unlock the directory
   touch Snakefile
   snakemake --unlock

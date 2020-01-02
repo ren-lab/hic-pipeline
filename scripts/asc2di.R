@@ -37,7 +37,6 @@ DI = ifelse(E==0,0,sign(B-A)* ( (A-E)**2/E + (B-E)**2/E))
 #print(c(A,B,E,DI))
 DI
 }
-
 DIs = sapply(1:nrow(mat), function(x){calc_DI(mat[x,],bin_num,x)})
 
 chrs = rep(chr,nrow(mat))
