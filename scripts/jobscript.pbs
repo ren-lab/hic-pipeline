@@ -4,7 +4,6 @@
 #PBS -m a
 
 #properties = {properties}
-#module load biotools
 #module load R
 module load bwa
 unset PYTHONPATH

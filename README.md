@@ -19,6 +19,8 @@ See INSTALL
 4. Copy the snakemake.config.yaml file into your project folder, and edit it to your need. 
 5. Run `(path-to-this-directory)/bin/run_hic_vanilla.sh -c snakemake.config.yaml -e your.email@ucsd.edu -s server`. 
 
+6. Run `(path-to-this-directory)/bin/run_hic_options.sh -c snakemake.config.yaml -s server -o [options]` if you only need to generate part of the output, for instance, valid read pairs.
+
 # Modules
 ## preprocessing (Fastq -> read pairs)
 * Map reads from fastq from each read end
@@ -33,7 +35,23 @@ See INSTALL
   Use the method from Nagano et al. 2017; Olivares-Chauvet et al 2016
 ## calculate AB compartments
   Implemented the method from Rao et al. 2009. 
-  
+
+# File formats: 
+## Read Pairs: 
+Columns: 
+1)Read Name 
+2) R1 mapping CIGAR
+3) R1 chr 
+4) R1 position 
+5) R1 fragment 
+6) R2 mapping CIGAR
+7) R2 chr 
+8) R2 position 
+9) R2 fragment 
+10) R1 mapping quality
+11) R2 mapping quality
+
+
 # Contributing Authors
 * [Shawn Yanxiao Zhang](https://github.com/shawnzhangyx)
 * Initial pieces from [Bin Li](https://github.com/bil022)

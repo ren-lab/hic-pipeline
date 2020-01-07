@@ -11,9 +11,14 @@ LIB = BASE_DIR + "/../lib/"
 
 GENOME = config["GENOME"]
 # samples
-SAMPLES = config["SAMPLES"].split()
 R1 = config["R1_SUFFIX"]
 R2 = config["R2_SUFFIX"]
+SAMPLES = config["SAMPLES"].split()
+# if the first field is *, then process every sample in the fastq folder. 
+if SAMPLES[0] == "ALL":
+  fastqs_p1 = glob.glob("fastq/*"+R1+"*")
+  SAMPLES = [re.sub("fastq/(.+)"+ R1 +".*$","\\1",a) for a in fastqs_p1]
+
 # fastqs
 FASTQ_R1 = {} 
 FASTQ_R2 = {}
@@ -51,6 +56,8 @@ if "chrM" in CHR:
 #print(CHR)
 
 
+localrules: qc_combine
+
 ## complete version will output the bam file in addition to the sorted txt files. 
 rule all:
     input:
@@ -75,7 +82,7 @@ rule vanilla:
 
 rule valid_pairs:
     input:
-        expand("{sample}/{sample}.valid_pairs.dedup.sorted.txt",sample=SAMPLES),
+        expand("valid_pairs/{sample}.valid_pairs.dedup.sorted.txt",sample=SAMPLES),
         "mapping_summary.txt"
 
 
@@ -83,34 +90,40 @@ rule bwa_map:
     output: 
         # do not produce bam file.
 #        "{sample}/{sample}.raw.sam",
-        "{sample}/{sample}.valid_pairs.txt",
-        "{sample}/log/bwa.R1.log",
+        "valid_pairs/{sample}.valid_pairs.txt.gz",
+        "valid_pairs/log/{sample}.bwa.R1.log",
     input: 
         R1 = lambda wildcards: FASTQ_R1[wildcards.sample],
         R2 = lambda wildcards: FASTQ_R2[wildcards.sample]
+    params:
+      pbsName=lambda wildcards: wildcards.sample
     benchmark:
         "benchmarks/{sample}.bwa_map.txt"
     threads: N_CPUS
     shell: 
-        "cd {wildcards.sample} && "
-        "{SCP}/bwa_map2.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -e {SITE_POS} -n {wildcards.sample}"
+        "cd valid_pairs && "
+        "{SCP}/bwa_map2.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -e {SITE_POS} -n {wildcards.sample} && "
+        "gzip {wildcards.sample}.valid_pairs.txt.gz"
 
 rule valid_pairs_dedup:
     output: 
-        "{sample}/{sample}.valid_pairs.dedup.sorted.txt"
+        "valid_pairs/{sample}.valid_pairs.dedup.sorted.txt.gz"
     input: 
-        "{sample}/{sample}.valid_pairs.txt"
+        "valid_pairs/{sample}.valid_pairs.txt.gz"
+    params:
+        pbsName=lambda wildcards: wildcards.sample
     benchmark:
         "benchmarks/{sample}.valid_pairs_dedup.txt"
     threads: N_CPUS
     shell: 
-        "{LIB}/sort --parallel={threads} -k3,3 -k7,7 -k4,4n -k8,8n -u {input} > {output}"
+        "zcat {input} |{LIB}/sort --parallel={threads} -k3,3 -k7,7 -k4,4n -k8,8n -u |"
+        "gzip > {output}"
 
 rule txt2juicer:
     output:
         "{sample}/{sample}.hic"
     input:
-        "{sample}/{sample}.valid_pairs.dedup.sorted.txt"
+        "{sample}/{sample}.valid_pairs.dedup.sorted.txt.gz"
     benchmark:
         "benchmarks/{sample}.txt2juicer.txt"
     threads: 1
@@ -184,13 +197,17 @@ rule di_ins_bedgraph:
 rule qc_per_sample: 
   input:
       fastq = lambda wildcards: FASTQ_R1[wildcards.sample],
-      valid_pairs = "{sample}/{sample}.valid_pairs.txt",
-      valid_nodup_pairs = "{sample}/{sample}.valid_pairs.dedup.sorted.txt"
+      valid_pairs = "valid_pairs/{sample}.valid_pairs.txt",
+      valid_nodup_pairs = "valid_pairs/{sample}.valid_pairs.dedup.sorted.txt"
   output: 
-      "{sample}/{sample}.mapping_summary.txt"
+      "qc/{sample}.mapping_summary.txt"
   threads: 1
+  params:
+      pbsName=lambda wildcards: wildcards.sample,
+      # determine the fastq file compression format
+      Read = lambda wildcards: "zcat" if FASTQ_R1[wildcards.sample][0][-3:] == ".gz" else "bzcat" if FASTQ_R1[wildcards.sample][0][-4:] == ".bz2" else  "cat"
   shell: 
-    "fa=$(bzcat {input.fastq} |wc -l);"
+    "fa=$({params.Read} {input.fastq} |wc -l);"
     "fa=$((fa/4));"
     "vp=$(wc -l {input.valid_pairs}|cut -f 1 -d' ' );"
     "vpNodup=$(wc -l {input.valid_nodup_pairs}|cut -f 1 -d' ' );"
@@ -200,7 +217,7 @@ rule qc_per_sample:
 
 rule qc_combine: 
   input: 
-      expand("{sample}/{sample}.mapping_summary.txt", sample=SAMPLES)
+      expand("qc/{sample}.mapping_summary.txt", sample=SAMPLES)
   output: 
       "mapping_summary.txt"
   threads: 1

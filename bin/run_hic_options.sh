@@ -56,7 +56,7 @@ if ! [ -e $CONFIG_FILE ]; then echo File $CONFIG_FILE not exist; exit 1; fi
 if [ -z ${SERVER+x} ];
   then echo -e "Please tell us the server, eg. silencer, TSCC"; usage;exit; fi
 
-NTHREADS=40
+NTHREADS=30
 DIR=$(dirname $0)
 LOG=run-$(date +%Y-%m-%d-%H-%M-%S).log
 ## validate the programs are installed.
@@ -98,7 +98,7 @@ elif [ $SERVER == "TSCC" ]; then
   --configfile $CONFIG_FILE \
   --config BWA_INDEX_PATH=/projects/ps-renlab/share/bwa_indices/ \
   --cluster-config ${DIR}/../cluster.json \
-  --cluster "qsub -l nodes=1:ppn={threads},walltime={cluster.time} -N {rule} -q hotel -o pbslog/{rule}.pbs.out -e pbslog/{rule}.pbs.err" \
+  --cluster "qsub -l nodes=1:ppn={threads},walltime={cluster.time} -N {rule} -q hotel -o pbslog/{params.pbsName}.{rule}.pbs.out -e pbslog/{params.pbsName}.{rule}.pbs.err" \
   --jobscript ${DIR}/../scripts/jobscript.pbs --jobname "{rulename}.{jobid}.pbs" \
   2> >(tee -a $LOG >&2)
   echo "$(date) # Analysis finished" >> $LOG

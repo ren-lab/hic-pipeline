@@ -59,18 +59,18 @@ fi
 
 
 
-FIFO1=r1.fifo
-FIFO2=r2.fifo
+FIFO1=$ID.r1.fifo
+FIFO2=$ID.r2.fifo
 SAM=$ID.raw.sam
 NTHREADS=$((NTHREADS/2))
 
 if [ ! -e $FIFO1 ]; then mkfifo $FIFO1; fi
 if [ ! -e $FIFO2 ]; then mkfifo $FIFO2; fi
 
-bwa mem -t $NTHREADS $REF.fa <($Read $R1 ) 2> log/bwa.R1.log |\
-  $BIN/chimeric.pl 2> log/bwa.F1.log > $FIFO1 |\
-bwa mem -t $NTHREADS $REF.fa <($Read $R2 ) 2> log/bwa.R2.log |\
-  $BIN/chimeric.pl 2> log/bwa.F2.log > $FIFO2 |\
+bwa mem -t $NTHREADS $REF.fa <($Read $R1 ) 2> log/$ID.bwa.R1.log |\
+  $BIN/chimeric.pl 2> log/$ID.bwa.F1.log > $FIFO1 |\
+bwa mem -t $NTHREADS $REF.fa <($Read $R2 ) 2> log/$ID.bwa.R2.log |\
+  $BIN/chimeric.pl 2> log/$ID.bwa.F2.log > $FIFO2 |\
   $BIN/mkPE3 -o $SAM -a $ID.valid_pairs.txt -p $SITE_POS -fnt -1 $FIFO1 -2 $FIFO2 -c 1 
 
 rm -f $FIFO1 $FIFO2 
