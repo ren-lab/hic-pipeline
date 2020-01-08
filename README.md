@@ -38,6 +38,7 @@ See INSTALL
 
 # File formats: 
 ## Read Pairs: 
+```
 Columns: 
 1)Read Name 
 2) R1 mapping CIGAR
@@ -50,7 +51,7 @@ Columns:
 9) R2 fragment 
 10) R1 mapping quality
 11) R2 mapping quality
-
+```
 
 # Contributing Authors
 * [Shawn Yanxiao Zhang](https://github.com/shawnzhangyx)

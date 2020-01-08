@@ -82,9 +82,15 @@ rule vanilla:
 
 rule valid_pairs:
     input:
-        expand("valid_pairs/{sample}.valid_pairs.dedup.sorted.txt",sample=SAMPLES),
+        expand("valid_pairs/{sample}.valid_pairs.dedup.sorted.txt.gz",sample=SAMPLES),
         "mapping_summary.txt"
 
+rule scHiC:
+    input:
+      expand("valid_pairs.scHiC/{sample}.valid_pairs.frag_dedup.sorted.txt.gz",sample=SAMPLES),
+      expand("valid_pairs.scHiC/{sample}.fragment.gz",sample=SAMPLES),
+      expand("valid_pairs.scHiC/{sample}.valid_pairs.rm_hotspot.sorted.txt.gz",sample=SAMPLES),
+      "mapping_summary.scHiC.txt"
 
 rule bwa_map: 
     output: 
@@ -118,6 +124,33 @@ rule valid_pairs_dedup:
     shell: 
         "zcat {input} |{LIB}/sort --parallel={threads} -k3,3 -k7,7 -k4,4n -k8,8n -u |"
         "gzip > {output}"
+
+rule valid_pairs_dedup_fragment:
+    input: 
+      "valid_pairs/{sample}.valid_pairs.dedup.sorted.txt.gz"
+    output:
+      "valid_pairs.scHiC/{sample}.valid_pairs.frag_dedup.sorted.txt.gz"
+    params:
+      pbsName=lambda wildcards: wildcards.sample
+    threads: 8
+    shell:
+      "zcat {input} | {LIB}/sort --parallel={threads} -k3,3 -k7,7 -k5,5n -k9,9n -u |"
+      "gzip > {output}"
+
+## remove any fragment that interact with at least 10 other locations. 
+rule valid_pairs_remove_hotspot:
+    input: 
+      "valid_pairs.scHiC/{sample}.valid_pairs.frag_dedup.sorted.txt.gz"
+    output:
+      hotspot = "valid_pairs.scHiC/{sample}.fragment.gz",
+      vp = "valid_pairs.scHiC/{sample}.valid_pairs.rm_hotspot.sorted.txt.gz"
+    params:
+      pbsName=lambda wildcards: wildcards.sample
+    threads: 1 
+    shell:      
+      "zcat {input} | awk -v FS='\t' -v OFS='\t' '{{ a[$3\":\"$5]++;a[$7\":\"$9]++ }} END {{ for (x in a) {{  print x,a[x] }} }}' |sort -k2,2nr |gzip > {output.hotspot};"
+      "awk -v FS='\t' -v OFS='\t' '(NR==FNR) {{a[$1] = FNR}} (NR!=FNR) {{ if ( !($3\":\"$5 in a) && !($7\":\"$9 in a)) {{print $0 }} }}' "
+      "<(zcat {output.hotspot}| awk '$2>10 {{print $0}}' ) <(zcat {input}) |gzip > {output.vp}"
 
 rule txt2juicer:
     output:
@@ -215,11 +248,43 @@ rule qc_per_sample:
     "echo -e \"Sample\tRaw\tVP\tVP_uniq\tVP_cis\tVP_cis15k\"  > {output};"
     "echo -e \"{wildcards.sample}\t$fa\t$vp\t$vpNodup\t$cis_pair\" >> {output}"
 
+rule qc_per_sample_scHiC:
+  input:
+      fastq = lambda wildcards: FASTQ_R1[wildcards.sample],
+      valid_pairs = "valid_pairs/{sample}.valid_pairs.txt.gz",
+      valid_nodup_pairs = "valid_pairs/{sample}.valid_pairs.dedup.sorted.txt.gz",
+      valid_nodup_frag = "valid_pairs.scHiC/{sample}.valid_pairs.rm_hotspot.sorted.txt.gz"
+  output:
+      "qc/{sample}.mapping_summary.scHiC.txt"
+  threads: 1
+  params:
+      pbsName=lambda wildcards: wildcards.sample,
+      # determine the fastq file compression format
+      Read = lambda wildcards: "zcat" if FASTQ_R1[wildcards.sample][0][-3:] == ".gz" else "bzcat" if FASTQ_R1[wildcards.sample][0][-4:] == ".bz2" else  "cat"
+  shell:
+    "fa=$({params.Read} {input.fastq} |wc -l);"
+    "fa=$((fa/4));"
+    "vp=$(zcat {input.valid_pairs}|wc -l|cut -f 1 -d' ' );"
+    "vpNodup=$(zcat {input.valid_nodup_pairs}|wc -l|cut -f 1 -d' ' );"
+    "cis_pair=$(zcat {input.valid_nodup_frag}|awk '$3!=$7 || $4-$8 >1000 || $8-$4 >1000 {{cnts++}} END{{print cnts}}');" 
+    "echo -e \"Sample\tRaw\tVP\tVP_uniq\tVP_cis1kORtrans\"  > {output};"
+    "echo -e \"{wildcards.sample}\t$fa\t$vp\t$vpNodup\t$cis_pair\" >> {output}"
+
+
 rule qc_combine: 
   input: 
       expand("qc/{sample}.mapping_summary.txt", sample=SAMPLES)
   output: 
       "mapping_summary.txt"
+  threads: 1
+  shell:
+    "cat {input} | awk -v OFS='\t' '{{ if (NR==1) {{ print $0 }} else {{ if (NR%2==0) {{ print $0 }} }} }}' > {output};"
+
+rule qc_combine_scHiC:
+  input:
+      expand("qc/{sample}.mapping_summary.scHiC.txt", sample=SAMPLES)
+  output:
+      "mapping_summary.scHiC.txt"
   threads: 1
   shell:
     "cat {input} | awk -v OFS='\t' '{{ if (NR==1) {{ print $0 }} else {{ if (NR%2==0) {{ print $0 }} }} }}' > {output};"
