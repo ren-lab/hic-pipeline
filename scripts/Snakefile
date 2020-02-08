@@ -18,6 +18,7 @@ SAMPLES = config["SAMPLES"].split()
 if SAMPLES[0] == "ALL":
   fastqs_p1 = glob.glob("fastq/*"+R1+"*")
   SAMPLES = [re.sub("fastq/(.+)"+ R1 +".*$","\\1",a) for a in fastqs_p1]
+#print(SAMPLES)
 
 # fastqs
 FASTQ_R1 = {} 
@@ -30,6 +31,7 @@ for sample in SAMPLES:
 
 
 N_CPUS = config["N_CPUS"]
+MAPQ = config["MAPQ"] or 30
 BWA_INDEX_PATH = config["BWA_INDEX_PATH"]
 #print(N_CPUS)
 RES_ENZYME = config["RES_ENZYME"]
@@ -54,7 +56,6 @@ with open(REF+".fa.fai") as inf:
 if "chrM" in CHR: 
   CHR.remove("chrM")
 #print(CHR)
-
 
 localrules: qc_combine
 
@@ -87,7 +88,7 @@ rule valid_pairs:
 
 rule scHiC:
     input:
-      expand("valid_pairs.scHiC/{sample}.valid_pairs.frag_dedup.sorted.txt.gz",sample=SAMPLES),
+      expand("valid_pairs.scHiC/{sample}.1k_bin.uniq.contacts.txt.gz",sample=SAMPLES),
       expand("valid_pairs.scHiC/{sample}.fragment.gz",sample=SAMPLES),
       expand("valid_pairs.scHiC/{sample}.valid_pairs.rm_hotspot.sorted.txt.gz",sample=SAMPLES),
       "mapping_summary.scHiC.txt"
@@ -109,48 +110,84 @@ rule bwa_map:
     shell: 
         "cd valid_pairs && "
         "{SCP}/bwa_map2.sh -1 ../{input.R1}  -2 ../{input.R2} -g {REF} -p {threads} -e {SITE_POS} -n {wildcards.sample} && "
-        "gzip {wildcards.sample}.valid_pairs.txt.gz"
+        "gzip {wildcards.sample}.valid_pairs.txt"
+
+rule rm_low_quality_alignments:
+  output:
+    expand("valid_pairs/{{sample}}.valid_pairs.mapq{mapq}.txt.gz",mapq=MAPQ)
+  input:
+    "valid_pairs/{sample}.valid_pairs.txt.gz"
+  shell:
+    "zcat {input}|awk ' $10 >= {MAPQ} && $11 >= {MAPQ} {{print $0}}' |gzip > {output}"
 
 rule valid_pairs_dedup:
     output: 
         "valid_pairs/{sample}.valid_pairs.dedup.sorted.txt.gz"
     input: 
-        "valid_pairs/{sample}.valid_pairs.txt.gz"
+        expand("valid_pairs/{{sample}}.valid_pairs.mapq{mapq}.txt.gz",mapq=MAPQ)
     params:
         pbsName=lambda wildcards: wildcards.sample
     benchmark:
         "benchmarks/{sample}.valid_pairs_dedup.txt"
-    threads: N_CPUS
+    threads: N_CPUS 
     shell: 
         "zcat {input} |{LIB}/sort --parallel={threads} -k3,3 -k7,7 -k4,4n -k8,8n -u |"
         "gzip > {output}"
 
-rule valid_pairs_dedup_fragment:
-    input: 
-      "valid_pairs/{sample}.valid_pairs.dedup.sorted.txt.gz"
-    output:
-      "valid_pairs.scHiC/{sample}.valid_pairs.frag_dedup.sorted.txt.gz"
-    params:
-      pbsName=lambda wildcards: wildcards.sample
-    threads: 8
-    shell:
-      "zcat {input} | {LIB}/sort --parallel={threads} -k3,3 -k7,7 -k5,5n -k9,9n -u |"
-      "gzip > {output}"
+## reduce interaction paris connecting the same 1kb bin to 1. 
+rule filter_1k_bin:
+  output:
+    "valid_pairs.scHiC/{sample}.1k_bin.uniq.contacts.txt.gz"
+  input:
+    "valid_pairs/{sample}.valid_pairs.dedup.sorted.txt.gz"
+  shell:
+    "zcat {input}| awk -v OFS='\t' '{{print $1,$3,$4,int($4/1000),$7,$8,int($8/1000)}}' "
+#    "|awk -v OFS='\t' '$2!=$5 || $4!=$7 {{print $0}}'"
+    "|sort -k2,2 -k5,5 -k4,4n -k7,7n -u|gzip > {output}"
 
-## remove any fragment that interact with at least 10 other locations. 
+## remove any 1kb bin that interact with at least 10 other locations.
 rule valid_pairs_remove_hotspot:
-    input: 
-      "valid_pairs.scHiC/{sample}.valid_pairs.frag_dedup.sorted.txt.gz"
+    input:
+      "valid_pairs.scHiC/{sample}.1k_bin.uniq.contacts.txt.gz"
     output:
       hotspot = "valid_pairs.scHiC/{sample}.fragment.gz",
       vp = "valid_pairs.scHiC/{sample}.valid_pairs.rm_hotspot.sorted.txt.gz"
     params:
       pbsName=lambda wildcards: wildcards.sample
-    threads: 1 
-    shell:      
-      "zcat {input} | awk -v FS='\t' -v OFS='\t' '{{ a[$3\":\"$5]++;a[$7\":\"$9]++ }} END {{ for (x in a) {{  print x,a[x] }} }}' |sort -k2,2nr |gzip > {output.hotspot};"
-      "awk -v FS='\t' -v OFS='\t' '(NR==FNR) {{a[$1] = FNR}} (NR!=FNR) {{ if ( !($3\":\"$5 in a) && !($7\":\"$9 in a)) {{print $0 }} }}' "
-      "<(zcat {output.hotspot}| awk '$2>10 {{print $0}}' ) <(zcat {input}) |gzip > {output.vp}"
+    threads: 1
+    shell:
+      "zcat {input} | awk -v FS='\t' -v OFS='\t' '{{ a[$2\":\"$4]++;a[$5\":\"$7]++ }} END {{ for (x in a) {{  print x,a[x] }} }}' |sort -k2,2nr |gzip > {output.hotspot};"
+      "awk -v FS='\t' -v OFS='\t' '(NR==FNR) {{a[$1] = FNR}} (NR!=FNR) {{ if ( !($2\":\"$4 in a) && !($5\":\"$7 in a)) {{print $0 }} }} ' "
+      "<(zcat {output.hotspot}| awk '$2>10 {{print $0}}END{{print \"test\",\"test\" }}' ) <(zcat {input}) |gzip > {output.vp}"
+
+
+## reduce interaction pairs connecting the same fragments to 1. 
+#rule valid_pairs_dedup_fragment:
+#    input: 
+#      "valid_pairs/{sample}.valid_pairs.dedup.sorted.txt.gz"
+#    output:
+#      "valid_pairs.scHiC/{sample}.valid_pairs.frag_dedup.sorted.txt.gz"
+#    params:
+#      pbsName=lambda wildcards: wildcards.sample
+#    threads: 2
+#    shell:
+#      "zcat {input} | {LIB}/sort --parallel={threads} -k3,3 -k7,7 -k5,5n -k9,9n -u |"
+#      "gzip > {output}"
+
+## remove any fragment that interact with at least 10 other locations. 
+#rule valid_pairs_remove_hotspot:
+#    input: 
+#      "valid_pairs.scHiC/{sample}.valid_pairs.frag_dedup.sorted.txt.gz"
+#    output:
+#      hotspot = "valid_pairs.scHiC/{sample}.fragment.gz",
+#      vp = "valid_pairs.scHiC/{sample}.valid_pairs.rm_hotspot.sorted.txt.gz"
+#    params:
+#      pbsName=lambda wildcards: wildcards.sample
+#    threads: 1 
+#    shell:      
+#      "zcat {input} | awk -v FS='\t' -v OFS='\t' '{{ a[$3\":\"$5]++;a[$7\":\"$9]++ }} END {{ for (x in a) {{  print x,a[x] }} }}' |sort -k2,2nr |gzip > {output.hotspot};"
+#      "awk -v FS='\t' -v OFS='\t' '(NR==FNR) {{a[$1] = FNR}} (NR!=FNR) {{ if ( !($3\":\"$5 in a) && !($7\":\"$9 in a)) {{print $0 }} }}' "
+#      "<(zcat {output.hotspot}| awk '$2>10 {{print $0}}' ) <(zcat {input}) |gzip > {output.vp}"
 
 rule txt2juicer:
     output:
@@ -172,25 +209,25 @@ rule juicer2di_insulation:
         #"{sample}/{sample}.valid_pairs.dedup.sorted.txt"
         "{sample}/{sample}.hic"
     benchmark:
-        "benchmarks/{sample}.pairs2mat.txt"
+        "benchmarks/{sample}.{chr}.pairs2mat.txt"
     threads: 1
     shell:
         "{SCP}/script_juicer2di_ins.sh {wildcards.chr} {REF} {BIN_SIZE} {BIN_NUM} "
         "{GENOME_FEATURE} {wildcards.sample}"
 
 ## juicer to OE matrix and to PCA analysis.
-rule juicer2PC1: 
-  output:
-    PC1 = "{sample}/matrix/{sample}.{chr}.PC1",
-    oe = temp("{sample}/matrix/{sample}.{chr}.oe"),
-  input: 
-    "{sample}/{sample}.hic"
-  benchmark:
-    "benchmarks/{sample}.{chr}.juicer2oe.txt"
-  threads: 1
-  shell: 
-    "java -jar {LIB}/juicer_tools.jar dump oe KR {input} {wildcards.chr} {wildcards.chr} BP {BIN_SIZE} "
-    "> {output.oe};Rscript {SCP}/calc_PC1.r {output.oe} {wildcards.chr} {TSS} > {output.PC1}"
+#rule juicer2PC1: 
+#  output:
+#    PC1 = "{sample}/matrix/{sample}.{chr}.PC1",
+#    oe = temp("{sample}/matrix/{sample}.{chr}.oe"),
+#  input: 
+#    "{sample}/{sample}.hic"
+#  benchmark:
+#    "benchmarks/{sample}.{chr}.juicer2oe.txt"
+#  threads: 1
+#  shell: 
+#    "java -jar {LIB}/juicer_tools.jar dump oe KR {input} {wildcards.chr} {wildcards.chr} BP {BIN_SIZE} "
+#    "> {output.oe};Rscript {SCP}/calc_PC1.r {output.oe} {wildcards.chr} {TSS} > {output.PC1}"
     
 rule combine_PC1: 
   output: 
@@ -230,8 +267,8 @@ rule di_ins_bedgraph:
 rule qc_per_sample: 
   input:
       fastq = lambda wildcards: FASTQ_R1[wildcards.sample],
-      valid_pairs = "valid_pairs/{sample}.valid_pairs.txt",
-      valid_nodup_pairs = "valid_pairs/{sample}.valid_pairs.dedup.sorted.txt"
+      valid_pairs = "valid_pairs/{sample}.valid_pairs.txt.gz",
+      valid_nodup_pairs = "valid_pairs/{sample}.valid_pairs.dedup.sorted.txt.gz"
   output: 
       "qc/{sample}.mapping_summary.txt"
   threads: 1
@@ -242,9 +279,9 @@ rule qc_per_sample:
   shell: 
     "fa=$({params.Read} {input.fastq} |wc -l);"
     "fa=$((fa/4));"
-    "vp=$(wc -l {input.valid_pairs}|cut -f 1 -d' ' );"
-    "vpNodup=$(wc -l {input.valid_nodup_pairs}|cut -f 1 -d' ' );"
-    "cis_pair=$(awk -v FS='\t' -v OFS='\t' '{{if ($3 == $7){{ m++;if ( $8-$4 >=15000 || $8-$4 <= -15000 ) {{n++}} }} }}END {{ print m,n}}' {input.valid_nodup_pairs} );"
+    "vp=$(zcat {input.valid_pairs}|wc -l|cut -f 1 -d' ' );"
+    "vpNodup=$(zcat {input.valid_nodup_pairs}|wc -l|cut -f 1 -d' ' );"
+    "cis_pair=$(zcat {input.valid_nodup_pairs}|awk -v FS='\t' -v OFS='\t' '{{if ($3 == $7){{ m++;if ( $8-$4 >=15000 || $8-$4 <= -15000 ) {{n++}} }} }}END {{ print m,n}}'  );"
     "echo -e \"Sample\tRaw\tVP\tVP_uniq\tVP_cis\tVP_cis15k\"  > {output};"
     "echo -e \"{wildcards.sample}\t$fa\t$vp\t$vpNodup\t$cis_pair\" >> {output}"
 
@@ -277,6 +314,8 @@ rule qc_combine:
   output: 
       "mapping_summary.txt"
   threads: 1
+  params:
+    pbsName="All"
   shell:
     "cat {input} | awk -v OFS='\t' '{{ if (NR==1) {{ print $0 }} else {{ if (NR%2==0) {{ print $0 }} }} }}' > {output};"
 
@@ -286,6 +325,8 @@ rule qc_combine_scHiC:
   output:
       "mapping_summary.scHiC.txt"
   threads: 1
+  params:
+    pbsName="All"
   shell:
     "cat {input} | awk -v OFS='\t' '{{ if (NR==1) {{ print $0 }} else {{ if (NR%2==0) {{ print $0 }} }} }}' > {output};"
 

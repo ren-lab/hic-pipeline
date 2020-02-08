@@ -1,4 +1,6 @@
 # oe matrix
+options(scipen=99)
+
 suppressMessages(require(data.table))
 suppressMessages(require(GenomicRanges))
 a=fread(commandArgs(trailing=T)[1],skip=1)
@@ -26,13 +28,15 @@ b2 = b[idx,idx]
 pca2 = prcomp(b2)
 pc1 = pca2$x[,1]
 chr = commandArgs(trailing=T)[2]
-start = (idx-1)*50000 
-end = start + 50000
+res = as.integer(commandArgs(trailing=T)[3])
+
+start = (idx-1)*res
+end = start + res
 out = data.frame(chr,start,end,pc1)
 
 b1=GRanges(out[which(out$pc1>0),1:3])
 b2=GRanges(out[which(out$pc1<0),1:3])
-tss = fread(commandArgs(trailing=T)[3])
+tss = fread(commandArgs(trailing=T)[4])
 colnames(tss) = c("chr","start","end","gene",".","strand")
 tss2 = GRanges(tss[,1:3])
 

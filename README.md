@@ -40,7 +40,7 @@ See INSTALL
 ## Read Pairs: 
 ```
 Columns: 
-1)Read Name 
+1) Read Name 
 2) R1 mapping CIGAR
 3) R1 chr 
 4) R1 position 

@@ -86,7 +86,7 @@ elif [ $SERVER == "TSCC" ]; then
   ### load modules.
   module load python
   unset $PYTHONPATH
-  source /projects/ps-renlab/share/Pipelines/environments/python3env_TSCC/bin/activate
+  #source /projects/ps-renlab/share/Pipelines/environments/python3env_TSCC/bin/activate
   ### unlock the directory
   touch Snakefile
   snakemake --unlock
