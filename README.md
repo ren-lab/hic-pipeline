@@ -40,12 +40,13 @@ See INSTALL
 ## Read Pairs: 
 ```
 Columns: 
-1) Read Name 
-2) R1 mapping CIGAR
+=======
+1)Read Name 
+2) R1 mapping Flag
 3) R1 chr 
 4) R1 position 
 5) R1 fragment 
-6) R2 mapping CIGAR
+6) R2 mapping Flag
 7) R2 chr 
 8) R2 position 
 9) R2 fragment 
