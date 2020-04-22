@@ -29,7 +29,7 @@ export TAD_OUTPUT=$di.m_out
 #if ! [ -e ${di%%DI}TAD ]; then
 
 #if ! [ -e $TAD_OUTPUT ]; then
-/opt/MATLAB/bin/matlab -nodisplay -nosplash -nodesktop < $BIN/TAD.m
+matlab -nodisplay -nosplash -nodesktop < $BIN/TAD.m
 #fi
 
 perl $TAD_PERL/file_ends_cleaner.pl $TAD_OUTPUT $TAD_INPUT | perl $TAD_PERL/converter_7col.pl | sed 's/chrchr/chr/' > $di.$$.7col

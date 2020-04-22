@@ -2,7 +2,7 @@
 ###
 import sys
 import pysam
-import gzip 
+#import gzip 
 import time
 
 bamName  = sys.argv[1]
@@ -47,7 +47,8 @@ def main():
   # read sam file. 
   sam = pysam.AlignmentFile(bamName,'rb')
   # open output txt file.
-  outF = gzip.open(outName,'wt')  
+  #outF = gzip.open(outName,'wt')  
+  outF = open(outName,'w')
 
   tic = time.time()
   for e,line in enumerate(sam.fetch(until_eof=True)):
