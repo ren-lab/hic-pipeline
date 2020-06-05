@@ -9,7 +9,8 @@ LIB=$SCP/../lib/
 chr=$1
 REF=$2
 bin_size=$3
-bin_num=$4
+bin_num_di=$4
+bin_num_ins=$5
 gnf=$5
 sample=$6
 
@@ -31,9 +32,9 @@ ${LIB}/straw KR ../../juicer/${sample}.hic $chr $chr BP $bin_size |\
 #  matrix/${sample}.${chr}.norm.asc
 
 # matrix to directionality index
-Rscript $SCP/asc2di.R $sample.$chr.norm.asc $chr $bin_size $bin_num \
+Rscript $SCP/asc2di.R $sample.$chr.norm.asc $chr $bin_size $bin_num_di \
   ${sample}.$chr.norm.DI
 # matrix to insulation score
 Rscript $SCP/mat2insulation.R  -m $sample.$chr.norm.asc  -b $bin_size \
-  -w $((bin_size*bin_num)) -c $chr -o $sample.$chr.insulation.bed
+  -w $((bin_size*bin_num_ins)) -c $chr -o $sample.$chr.insulation.bed
 

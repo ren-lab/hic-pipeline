@@ -15,6 +15,7 @@ GENOME: hg19   # genome build
 N_CPUS : 12  #number of CPUs for each sample. 
 RES_ENZYME:  GATC  # restriction enzyme. 
 BIN_SIZE: 50000  #bin size for calculating DI and insulation.
-BIN_NUM: 40 # number of bins to calculate DI TADs. 
+BIN_NUM_DI: 40 # number of bins to calculate DI TADs. 
+BIN_NUM_INS: 10 # number of bins to calculate insulation score.
 PC_RES: 100000 #resolution for calculating PC1 value.
 MAPQ: 0 # mapping quality filter

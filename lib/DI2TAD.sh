@@ -39,7 +39,7 @@ min=2; prob=0.99; binsize=$bin
 for chr in `awk '{print $1}' $di.$$.7col|sort -u`; do
   #echo "perl $TAD_PERL/hmm_probablity_correcter.pl <(awk '/^'$chr'\t/' $di.$$.7col) $min $prob $binsize | perl $TAD_PERL/hmm-state_caller.pl $fai $chr | perl $TAD_PERL/hmm-state_domains.pl"
   perl $TAD_PERL/hmm_probablity_correcter.pl <(awk '/^'$chr'\t/' $di.$$.7col) $min $prob $binsize | perl $TAD_PERL/hmm-state_caller.pl $fai $chr | perl $TAD_PERL/hmm-state_domains.pl
-done > $di.TAD
+done > $di.TAD.bed
 #else
 #  echo skip ... ${di%%DI}TAD exists
 #fi

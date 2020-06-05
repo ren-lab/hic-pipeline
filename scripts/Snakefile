@@ -32,13 +32,15 @@ for sample in SAMPLES:
 
 N_CPUS = config["N_CPUS"]
 MAPQ = config["MAPQ"] or 30
-print("MAPQ:",MAPQ)
+#print("MAPQ:",MAPQ)
 BWA_INDEX_PATH = config["BWA_INDEX_PATH"]
 #print(N_CPUS)
 RES_ENZYME = config["RES_ENZYME"]
 ## resolution for directionality index and insulation
 BIN_SIZE = config["BIN_SIZE"]
-BIN_NUM = config["BIN_NUM"]
+BIN_NUM_DI = config["BIN_NUM_DI"]
+BIN_NUM_INS = config["BIN_NUM_INS"]
+
 PC_RES = config["PC_RES"]
 ## reference and annotation path
 REF = BWA_INDEX_PATH + "/" + GENOME
@@ -60,10 +62,10 @@ with open(REF+".fa.fai") as inf:
         CHR.append(line.strip().split('\t')[0])
 if "chrM" in CHR: 
   CHR.remove("chrM")
-CHR = [str(x+1) for x in range(19)] + ["X"]
+#CHR = [str(x+1) for x in range(19)] + ["X"]
 #print(CHR)
 
-localrules: qc_combine combine_PC1
+localrules: qc_combine combine_PC1 di_ins_bedgraph
 
 ## complete version will output the bam file in addition to the sorted txt files. 
 rule all:
@@ -71,8 +73,8 @@ rule all:
 #        expand("{sample}/{sample}.valid_pairs.dedup.sorted.txt",sample=SAMPLES),
         expand("juicer/{sample}.hic",sample=SAMPLES),
 #        expand("DI/{sample}.norm.DI.bedgraph",sample=SAMPLES),
-#        expand("DI/{sample}.norm.DI.TAD",sample=SAMPLES),
-#        expand("insulation/{sample}.insulation.bedgraph",sample=SAMPLES),
+        expand("DI/{sample}.norm.DI.TAD.bed",sample=SAMPLES),
+        expand("insulation/{sample}.insulation.bedgraph",sample=SAMPLES),
 #        expand("PC1/{sample}.PC1.bedgraph",sample=SAMPLES)
         
 rule vanilla:
@@ -81,7 +83,7 @@ rule vanilla:
 #        expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
         expand("matrix/{sample}.{chr}.norm.DI",sample=SAMPLES,chr=CHR),
         expand("matrix/{sample}.{chr}.insulation.bed",sample=SAMPLES,chr=CHR),
-        expand("DI/{sample}.norm.DI.TAD",sample=SAMPLES),
+        expand("DI/{sample}.norm.DI.TAD.bed",sample=SAMPLES),
         expand("DI/{sample}.norm.DI.bedgraph",sample=SAMPLES),
         expand("insulation/{sample}.insulation.bedgraph",sample=SAMPLES),
         expand("PC1/{sample}.PC1.bedgraph",sample=SAMPLES),
@@ -210,22 +212,41 @@ rule txt2juicer:
     shell:
         "java -jar {LIB}/juicer_tools.jar pre -q {MAPQ} -f {SITE_POS} {input} {output} {GENOME}"
 
-rule juicer2di_insulation:
-    output: 
-        ascNorm = "matrix/{sample}/{sample}.{chr}.norm.asc",
-        di = "matrix/{sample}/{sample}.{chr}.norm.DI",
-        ins = "matrix/{sample}/{sample}.{chr}.insulation.bed"
-    input: 
-        #"{sample}/{sample}.valid_pairs.dedup.sorted.txt"
-        "juicer/{sample}.hic"
-    params:
-            pbsName=lambda wildcards: wildcards.sample
-    benchmark:
-        "benchmarks/{sample}.{chr}.pairs2mat.txt"
-    threads: 1
-    shell:
-        "{SCP}/script_juicer2di_ins.sh {wildcards.chr} {REF} {BIN_SIZE} {BIN_NUM} "
-        "{GENOME_FEATURE} {wildcards.sample}"
+rule juicer2matrix:
+  output: 
+    ascNorm = "matrix/{sample}/{sample}.{chr}.norm.asc"
+  input:
+    "juicer/{sample}.hic"
+  params:
+    pbsName=lambda wildcards: wildcards.sample
+  threads:1
+  shell:
+    "chr_size=$(awk -v chr=chr{wildcards.chr} '{{ if($1==chr)print $2}}' {REF}.fa.fai) && " 
+    "{LIB}/straw KR {input} {wildcards.chr} {wildcards.chr} BP {BIN_SIZE} |"
+    "{SCP}/col2mat.awk -v chr={wildcards.chr} -v bin_size={BIN_SIZE} "
+    "-v chr_size=${{chr_size}} > {output}"
+
+
+rule matrix2di: 
+  input: 
+    "matrix/{sample}/{sample}.{chr}.norm.asc"
+  output:
+    "matrix/{sample}/{sample}.{chr}.norm.DI"
+  params:
+    pbsName=lambda wildcards: wildcards.sample
+  shell:
+    "Rscript {SCP}/asc2di.R {input} {wildcards.chr} {BIN_SIZE} {BIN_NUM_DI} {output}"
+
+rule matrix2ins:
+  input: 
+    "matrix/{sample}/{sample}.{chr}.norm.asc"
+  output: 
+    "matrix/{sample}/{sample}.{chr}.insulation.bed"
+  params:
+    pbsName=lambda wildcards: wildcards.sample
+  shell:
+    "Rscript {SCP}/mat2insulation.R  -m {input}  -b {BIN_SIZE} "
+    " -w $(({BIN_SIZE}*{BIN_NUM_INS})) -c {wildcards.chr} -o {output}"
 
 ## juicer to OE matrix and to PCA analysis.
 rule juicer2PC1: 
@@ -256,19 +277,19 @@ rule combine_PC1:
 
 rule di2tad: 
     output: 
-        "{sample}/{sample}.norm.DI.TAD"
+        "DI/{sample}.norm.DI.TAD.bed"
     input:
-        expand("{{sample}}/matrix/{{sample}}.{chr}.norm.DI",chr=CHR)
+        expand("matrix/{{sample}}/{{sample}}.{chr}.norm.DI",chr=CHR)
     benchmark:
         "benchmarks/{sample}.di2tad.txt"
     threads: 1
     params:
         pbsName=lambda wildcards: wildcards.sample
     log:
-        "{sample}/log/di2tad.log"
+        "DI/log/{sample}.di2tad.log"
     shell:
-        "cat {input} > {wildcards.sample}/{wildcards.sample}.norm.DI; "
-        "{LIB}/DI2TAD.sh {wildcards.sample}/{wildcards.sample}.norm.DI {REF} {BIN_SIZE} >& {log}"
+        "cat {input} |awk '!/NA|-Inf/' - > DI/{wildcards.sample}.norm.DI; "
+        "{LIB}/DI2TAD.sh DI/{wildcards.sample}.norm.DI {REF} {BIN_SIZE} >& {log};"
 
 rule di_ins_bedgraph:
     output: 
