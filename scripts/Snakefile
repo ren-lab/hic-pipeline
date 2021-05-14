@@ -51,7 +51,9 @@ GENOME_FEATURE = BIN + "/../annotation/genome_features/"+ GENOME + \
 
 TSS_DICT = {
   "hg19":BIN + "../annotation/TSSs/hg19.gencode.v19.annotation.transcripts.tss10k.bed",
-  "mm10":BIN + "../annotation/TSSs/mm10.gencode.vM10.annotation.transcripts.tss1k.bed"
+  "hg38":BIN + "../annotation/TSSs/hg38.gencode.v26.annotation.transcripts.tss1k.bed",
+  "mm10":BIN + "../annotation/TSSs/mm10.gencode.vM10.annotation.transcripts.tss1k.bed",
+   "mm9":BIN + "../annotation/TSSs/mm9.gencode.vM1.annotation.transcripts.tss1k.bed"
   }
 TSS = TSS_DICT[GENOME]
 
@@ -75,19 +77,20 @@ rule all:
 #        expand("DI/{sample}.norm.DI.bedgraph",sample=SAMPLES),
         expand("DI/{sample}.norm.DI.TAD.bed",sample=SAMPLES),
         expand("insulation/{sample}.insulation.bedgraph",sample=SAMPLES),
-#        expand("PC1/{sample}.PC1.bedgraph",sample=SAMPLES)
-        
+#        expand("PC1/{sample}.PC1.bedgraph",sample=SAMPLES),
+        "mapping_summary.txt"
+
 rule vanilla:
     input: 
         expand("juicer/{sample}.hic",sample=SAMPLES),
 #        expand("{sample}/{sample}.norm.DI.bedgraph",sample=SAMPLES),
-        expand("matrix/{sample}.{chr}.norm.DI",sample=SAMPLES,chr=CHR),
-        expand("matrix/{sample}.{chr}.insulation.bed",sample=SAMPLES,chr=CHR),
-        expand("DI/{sample}.norm.DI.TAD.bed",sample=SAMPLES),
-        expand("DI/{sample}.norm.DI.bedgraph",sample=SAMPLES),
-        expand("insulation/{sample}.insulation.bedgraph",sample=SAMPLES),
-        expand("PC1/{sample}.PC1.bedgraph",sample=SAMPLES),
-
+#        expand("matrix/{sample}.{chr}.norm.DI",sample=SAMPLES,chr=CHR),
+#        expand("matrix/{sample}.{chr}.insulation.bed",sample=SAMPLES,chr=CHR),
+#        expand("DI/{sample}.norm.DI.TAD.bed",sample=SAMPLES),
+#        expand("DI/{sample}.norm.DI.bedgraph",sample=SAMPLES),
+#        expand("insulation/{sample}.insulation.bedgraph",sample=SAMPLES),
+#        expand("PC1/{sample}.PC1.bedgraph",sample=SAMPLES),
+        "mapping_summary.txt"
 rule valid_pairs:
     input:
         expand("valid_pairs/{sample}.valid_pairs.dedup.sorted.txt.gz",sample=SAMPLES),
@@ -221,7 +224,7 @@ rule juicer2matrix:
     pbsName=lambda wildcards: wildcards.sample
   threads:1
   shell:
-    "chr_size=$(awk -v chr=chr{wildcards.chr} '{{ if($1==chr)print $2}}' {REF}.fa.fai) && " 
+    "chr_size=$(awk -v chr={wildcards.chr} '{{ if($1==chr)print $2}}' {REF}.fa.fai) && " 
     "{LIB}/straw KR {input} {wildcards.chr} {wildcards.chr} BP {BIN_SIZE} |"
     "{SCP}/col2mat.awk -v chr={wildcards.chr} -v bin_size={BIN_SIZE} "
     "-v chr_size=${{chr_size}} > {output}"
